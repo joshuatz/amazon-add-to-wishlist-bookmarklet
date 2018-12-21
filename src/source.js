@@ -32,10 +32,15 @@ function addToAmazonWishlist(debug){
         window[globSettingKey] = (window[globSettingKey] || {});
         // Inject code
         if (getSetting('popupCodeInjected')!==true){
+            // Put html and css together and inject into page
             var injectionWrapper = document.createElement('div');
             injectionWrapper.innerHTML = popupUiHtml + '\r\n' + popupUiCss;
             document.querySelector('body').appendChild(injectionWrapper);
-            setSetting('popupCodeInjected',true);
+            this.popupDom = injectionWrapper;
+            // Add event listeners for UI
+            attachEventListeners();
+            // Store injection status so UI is not reinjected if bookmarklet is run again
+            setSetting('popupCodeInjected',true);   
         }
     }
 
@@ -43,12 +48,14 @@ function addToAmazonWishlist(debug){
         '<div class="a2wPopupUiWrapper">' +
             '<div class="a2wPopupUi">' +
                 '<div class="topMenuBar">' + 
+                    '<div class="closeButton tbButton">X</div>' +
                     '<div class="minimizeButton tbButton">-</div>' +
                     '<div class="maximizeButton tbButton a2wHidden">+</div>' +
-                    '<div class="closeButton tbButton">X</div>' +
                 '</div>' +
-                '<div class="productSelectedImageWrapper">' + 
-                    '<img src="" class="productSelectedImage" />' +
+                '<div class="popupBody">' +
+                    '<div class="productSelectedImageWrapper">' + 
+                        '<img src="" class="productSelectedImage" />' +
+                    '</div>' +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -60,8 +67,7 @@ function addToAmazonWishlist(debug){
             '}' +
             '.a2wPopupUi {' +
                 'width: 300px;' +
-                'height: 300px;' +
-                'background-color : red;' +
+                'height: auto;' +
                 'position : relative;' +
             '}' +
             '.a2wPopupUi .topMenuBar {' +
@@ -82,7 +88,39 @@ function addToAmazonWishlist(debug){
                 'border : 1px solid black;' +
                 'margin : 2px;' +
             '}' +
+            '.a2wPopupUi .popupBody {' +
+                'transition : all 1s;' +
+                '-webkit-transition : all 1s;' +
+                'background-color : red;' +
+                'height : 300px;' +
+            '}' +
         '</style>';
+
+    function toggleVisiblity(selector){
+        this.popupDom.querySelectorAll(selector).forEach(function(elem){
+            elem.classList.toggle('a2wHidden');
+        });
+    }
+
+    function minimizePopup(){
+        toggleVisiblity('.minimizeButton,.maximizeButton');
+        this.popupDom.querySelector('.popupBody').style.height = '0px';
+    }
+    function maximinizePopup(){
+        toggleVisiblity('.minimizeButton,.maximizeButton');
+        this.popupDom.querySelector('.popupBody').style.height = '';
+    }
+
+    function attachEventListeners(){
+        this.popupDom.querySelector('.minimizeButton').addEventListener('click',minimizePopup.bind(this));
+        this.popupDom.querySelector('.maximizeButton').addEventListener('click',maximinizePopup.bind(this));
+        this.popupDom.querySelector('.closeButton').addEventListener('click',function(evt){
+            // Remove popup
+            this.popupDom.remove();
+            // Clear injection status
+            setSetting('popupCodeInjected',false);   
+        }.bind(this));
+    }
 
     function mapProductJsonToInputs(productJson){
         var mappings = {
@@ -131,8 +169,10 @@ function addToAmazonWishlist(debug){
     }
 
     return {
-        run : run,
-        mapProductJsonToInputs : mapProductJsonToInputs
+        run : run.bind(this),
+        mapProductJsonToInputs : mapProductJsonToInputs.bind(this),
+        minimizePopup : minimizePopup.bind(this),
+        maximinizePopup : maximinizePopup.bind(this)
     };
 }
 
