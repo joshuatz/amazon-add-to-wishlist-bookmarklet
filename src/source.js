@@ -30,7 +30,7 @@ function addToAmazonWishlist(debug){
     };
 }
 
-function productDector(opt_DomElementOrSelector){
+function ProductDector(opt_DomElementOrSelector){
     // Set scope of future queries
     this.domScope = document.querySelector('html');
     if (typeof(opt_DomElementOrSelector)==='object'){
@@ -46,8 +46,13 @@ function productDector(opt_DomElementOrSelector){
         productPriceUSD : '$0.00',
         productImageUrl : '',
         productDescription : '',
-        productAvailability : 'instock'
+        productAvailability : 'instock',
+        productSku : ''
     };
+
+    // @TODO
+    function normalizeProductDetails(){
+    }
     // Generic querySelectors for product info - search is using order of array, so best selectors should come first
     var infoQuerySelectors = {
         special : {
@@ -114,6 +119,10 @@ function productDector(opt_DomElementOrSelector){
                     key : 'content'
                 },
                 {
+                    selector : 'meta[property="twitter:description"]',
+                    key : 'content'
+                },
+                {
                     selector : 'meta[name="description"]',
                     key : 'content'
                 },
@@ -127,6 +136,15 @@ function productDector(opt_DomElementOrSelector){
                 {
                     selector : 'meta[property^="og:image"]',
                     key : 'content'
+                }
+            ],
+            productSku : [
+                {
+                    selector : 'meta[itemprop="sku"]',
+                    key : 'content'
+                },
+                {
+                    selector : '[itemprop="gtin13"]'
                 }
             ]
         }
@@ -148,29 +166,29 @@ function productDector(opt_DomElementOrSelector){
                     }
                 }
                 else {
-                    return match.innerText.trim();
+                    // Default to checking for .content first
+                    if (match.hasAttribute('content') && match.getAttribute('content')!==''){
+                        return match.getAttribute('content');
+                    }
+                    else {
+                        return match.innerText.trim();
+                    }
                 }
             }
         }
+        return undefined;
     };
 
     this.getPriceInfo = function(){
         var price = this.getValueSelectorArr(infoQuerySelectors.special.priceAmount);
-        if (price){
-            if (typeof(price)==='string'){
-                // Remove non digits
-                price = price.replace(/[^\d\.]*/gim,'');
-                price = parseFloat(price);
+        if (!price){
+            // As last resort, try to use regex to grab price from page
+            var priceText = /\$\d+\.{0,1}\d*/.exec(this.domScope.innerText);
+            if (typeof(priceText[0])){
+                price = priceText[0];
             }
-            // Force to two decimals
-            price = parseFloat(price.toFixed(2));
-
-            // Save
-            productDetails.productPriceAmount = price;
-            productDetails.productPriceUSD = '$' + price.toString();
-            return price;
         }
-        return false;
+        return helpers.parsePrice(price);
     };
     this.getRegularDetails = function(){
         Object.keys(productDetails).forEach(function(detailName){
@@ -235,7 +253,24 @@ function productDector(opt_DomElementOrSelector){
             else {
                 return json;
             }
-        }.bind(this)
+        }.bind(this),
+        parsePrice : function(price){
+            if (price){
+                if (typeof(price)==='string'){
+                    // Remove non digits
+                    price = price.replace(/[^\d\.]*/gim,'');
+                    price = parseFloat(price);
+                }
+                // Force to two decimals
+                price = parseFloat(price.toFixed(2));
+    
+                // Save
+                productDetails.productPriceAmount = price;
+                productDetails.productPriceUSD = '$' + price.toString();
+                return price;
+            }
+            return false;
+        }
     }
 
     this.findProductLdJson = function(){
@@ -281,16 +316,26 @@ function productDector(opt_DomElementOrSelector){
         if ('offers' in json || 'Offers' in json){
             var offers = 'offers' in json ? json.offers : json.Offers;
             if (typeof(offers)==='object'){
-                debugger;
                 productDetails.productAvailability = ('availability' in offers) ? offers.availability : productDetails.productAvailability;
+                if ('price' in offers){
+                    helpers.parsePrice(offers.price);
+                }
+                else if ('lowPrice' in offers){
+                    helpers.parsePrice(offers.lowPrice);
+                }
+                else if ('highPrice' in offers){
+                    helpers.parsePrice(offers.highPrice);
+                }
             }
-            
         }
+        productDetails.productImageUrl = ('image' in json) ? json.image : productDetails.productImageUrl;
+        productDetails.productSku = ('sku' in json) ? json.sku : productDetails.productSku;
     };
-    
+
     this.tryLdJson = function(){
         var productLdJson = this.findProductLdJson();
         if (productLdJson){
+            console.log(productLdJson);
             this.parseProductLdJson(productLdJson);
         }
     }
@@ -310,7 +355,7 @@ function productDector(opt_DomElementOrSelector){
     }
 }
 
-var test = new productDector();
+var test = new ProductDector();
 test.genericSiteProductDetector();
 //test.findProductLdJson();
 test.tryLdJson();
