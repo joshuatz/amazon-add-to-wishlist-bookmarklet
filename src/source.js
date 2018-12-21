@@ -277,10 +277,23 @@ function productDector(opt_DomElementOrSelector){
         return productLdJson;
     };
 
-    this.parseLdJson = function(json){
-
+    this.parseProductLdJson = function(json){
+        if ('offers' in json || 'Offers' in json){
+            var offers = 'offers' in json ? json.offers : json.Offers;
+            if (typeof(offers)==='object'){
+                debugger;
+                productDetails.productAvailability = ('availability' in offers) ? offers.availability : productDetails.productAvailability;
+            }
+            
+        }
+    };
+    
+    this.tryLdJson = function(){
+        var productLdJson = this.findProductLdJson();
+        if (productLdJson){
+            this.parseProductLdJson(productLdJson);
+        }
     }
-
     this.specificSiteProductDetector = function(site){
         if (site === 'shopify'){
 
@@ -292,12 +305,13 @@ function productDector(opt_DomElementOrSelector){
         return productDetails;
     };
 
-
-
-    
-
+    this.getProductDetails = function(){
+        return productDetails;
+    }
 }
 
 var test = new productDector();
 test.genericSiteProductDetector();
-test.findProductLdJson();
+//test.findProductLdJson();
+test.tryLdJson();
+console.log(test.getProductDetails());
