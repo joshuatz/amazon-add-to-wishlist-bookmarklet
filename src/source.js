@@ -183,51 +183,76 @@ function productDector(opt_DomElementOrSelector){
         }.bind(this));
     };
 
-    this.findProductLdJson = function(){
-        var productLdJson = false;
-        function matchesProductJson(obj){
-            if (typeof(obj)==='object' && !Array.isArray(obj)){
-                if ('@type' in obj && (obj['@type']==='product' || obj['@type']==='Product')){
-                    return true;
-                }
-            }
-            return false;
-        }
-        function iterateOver(thing,callback,callbackArgs){
+    var helpers = {
+        iterateOver : function(thing,callback,callbackArgs){
             callbackArgs = (callbackArgs || {})
             callback = (callback || function(){});
             iterationArr = [];
-            if (Array.isArray(thing)){
-                thing.forEach(function(subThing){
-                    iterationArr.push(subThing);
-                    callback(subThing,callbackArgs);
-                });
+            if (thing){
+                if (Array.isArray(thing)){
+                    thing.forEach(function(subThing){
+                        iterationArr.push(subThing);
+                        callback(subThing,callbackArgs);
+                    });
+                }
+                else if (typeof(thing)==='object'){
+                    Object.keys(thing).forEach(function(keyString){
+                        iterationArr.push(thing[keyString]);
+                        callback(thing[keyString],callbackArgs);
+                    });
+                }
             }
-            else if (typeof(thing)==='object'){
-                Object.keys(thing).forEach(function(keyString){
-                    iterationArr.push(thing[keyString]);
-                    callback(thing[keyString],callbackArgs);
-                });
+            else {
+                callback({},callbackArgs);
             }
             return iterationArr;
-        }
-        
-        function recurseUntilProductJson(json,maxDepth,currDepth){
+        },
+        isTrueObj : function(obj){
+            if(obj && typeof(obj)==='object' && !Array.isArray(obj)){
+                return true;
+            }
+            return false;
+        },
+        recurseObjUntilMatch : function(json,maxDepth,currDepth,checker){
+            var boundFunc = helpers.recurseObjUntilMatch.bind(this);
             maxDepth = ((typeof(maxDepth)==='number' ? maxDepth : false) || this.maxDepth || 6);
             currDepth = typeof(currDepth)==='undefined' ? this.currDepth : currDepth;
-            if (currDepth <= maxDepth && !matchesProductJson(json)){
+            if (currDepth <= maxDepth && !checker(json)){
                 currDepth++;
-                var t = iterateOver(json);
+                var t = helpers.iterateOver(json);
                 for (var y=0; y<t.length; y++){
-                    if (matchesProductJson(t[y])){
+                    if (checker(t[y])){
                         return t[y];
                     }
-                    else return recurseUntilProductJson(t[y],maxDepth,currDepth);
+                    else {
+                        var attempt = boundFunc(t[y],maxDepth,currDepth,checker);
+                        if (checker(attempt)){
+                            return attempt;
+                        }
+                    }
                 }
             }
             else {
                 return json;
             }
+        }.bind(this)
+    }
+
+    this.findProductLdJson = function(){
+        var productLdJson = false;
+        function matchesProductJson(obj){
+            if (helpers.isTrueObj(obj)){
+                if ('@type' in obj && (obj['@type']==='product' || obj['@type']==='Product') && ('offers' in obj || 'Offers' in obj)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        function matchesOfferJson(obj){
+            if(helpers.isTrueObj(obj) && (obj['@type']==='Offer' || obj['@type']==='offer')){
+                return true;
+            }
+            return false;
         }
         
         var allJsonLdScripts = this.domScope.querySelectorAll('script[type="application/ld+json"]');
@@ -235,22 +260,15 @@ function productDector(opt_DomElementOrSelector){
             elem = allJsonLdScripts[x];
             try {
                 var topLdJson = JSON.parse(elem.innerText);
-                if ('@type' in topLdJson){
-                    if (matchesProductJson(topLdJson)){
-                        productLdJson = topLdJson;
-                    }
-                }
-                else {
-                    // Try recursing
-                    var lowerJson = recurseUntilProductJson(topLdJson,6,0);
-                    if (matchesProductJson(lowerJson)){
-                        productLdJson = lowerJson;
-                    }
+                var attempt = helpers.recurseObjUntilMatch(topLdJson,6,0,matchesProductJson);
+                if (matchesProductJson(attempt)){
+                    productLdJson = attempt;
                 }
             }
             finally {
                 // Likely invalid JSON stored in <script></script>
             }
+
             if (productLdJson){
                 break;
             }
@@ -282,4 +300,4 @@ function productDector(opt_DomElementOrSelector){
 
 var test = new productDector();
 test.genericSiteProductDetector();
-test.ldJsonParser();
+test.findProductLdJson();
