@@ -16,8 +16,31 @@ function addToAmazonWishlist(debug){
         type : 'wishlist'
     };
     function run(){
-
     }
+
+    function mapProductJsonToInputs(productJson){
+        var mappings = {
+            'productName' : 'productName',
+            'productPrice' : 'productPriceUSD',
+            'requestedQty' : null,
+            'asin' : null,
+            'productUrl' : 'productUrl',
+            'comment' : 'productDescription',
+            'imageUrl' : 'productImageUrl',
+            'registryID' : null,
+            'type' : null
+        }
+        for (var key in mappings) {
+            if (mappings.hasOwnProperty(key)) {
+                var mapping = mappings[key];
+                if (productJson.hasOwnProperty(mapping) && productJson[mapping]!==''){
+                    selectedProductDetails[key] = productJson[mapping];
+                }
+            }
+        }
+        return selectedProductDetails;
+    }
+
     function showProductInputPanel(){
 
     }
@@ -25,8 +48,25 @@ function addToAmazonWishlist(debug){
         
     }
 
+    function showImageSelector(primaryImageUrl){
+        var imageSrcArr = [];
+        if (primaryImageUrl){
+            imageSrcArr.push(primaryImageUrl);
+        }
+    }
+
+    function setSelectedImage(imageUrl){
+        this.selectedImage = imageUrl;
+        selectedProductDetails.imageUrl = imageUrl;
+    }
+
+    function setPageImage(imageUrl){
+        this.pageImage = imageUrl;
+    }
+
     return {
-        run : run
+        run : run,
+        mapProductJsonToInputs : mapProductJsonToInputs
     };
 }
 
@@ -50,9 +90,6 @@ function ProductDector(opt_DomElementOrSelector){
         productSku : ''
     };
 
-    // @TODO
-    function normalizeProductDetails(){
-    }
     // Generic querySelectors for product info - search is using order of array, so best selectors should come first
     var infoQuerySelectors = {
         special : {
@@ -347,16 +384,22 @@ function ProductDector(opt_DomElementOrSelector){
     this.genericSiteProductDetector = function(){
         this.getPriceInfo();
         this.getRegularDetails();
+        this.tryLdJson();
         return productDetails;
     };
 
     this.getProductDetails = function(){
         return productDetails;
     }
+    // @TODO
+    this.getNormalizedProductDetails = function(){
+        var normalizedProductDetails = productDetails;
+        // @TODO
+        return normalizedProductDetails;
+    }
 }
 
 var test = new ProductDector();
 test.genericSiteProductDetector();
-//test.findProductLdJson();
-test.tryLdJson();
-console.log(test.getProductDetails());
+console.log(test.getNormalizedProductDetails());
+addToAmazonWishlist().mapProductJsonToInputs(test.getNormalizedProductDetails());
