@@ -4,6 +4,7 @@
  */
 
 function addToAmazonWishlist(debug){
+    var globSettingKey = 'a2wBookmarklet12212018';
     var selectedProductDetails = {
         productName : '',
         productPrice : '$0.00',
@@ -15,8 +16,73 @@ function addToAmazonWishlist(debug){
         registryID : '',
         type : 'wishlist'
     };
-    function run(){
+
+    function getSetting(key){
+        window[globSettingKey] = (window[globSettingKey] || {});
+        return window[globSettingKey][key];
     }
+
+    function setSetting(key,val){
+        window[globSettingKey] = (window[globSettingKey] || {});
+        window[globSettingKey][key] = val;
+        return window[globSettingKey];
+    }
+
+    function run(){
+        window[globSettingKey] = (window[globSettingKey] || {});
+        // Inject code
+        if (getSetting('popupCodeInjected')!==true){
+            var injectionWrapper = document.createElement('div');
+            injectionWrapper.innerHTML = popupUiHtml + '\r\n' + popupUiCss;
+            document.querySelector('body').appendChild(injectionWrapper);
+            setSetting('popupCodeInjected',true);
+        }
+    }
+
+    var popupUiHtml = '' +
+        '<div class="a2wPopupUiWrapper">' +
+            '<div class="a2wPopupUi">' +
+                '<div class="topMenuBar">' + 
+                    '<div class="minimizeButton tbButton">-</div>' +
+                    '<div class="maximizeButton tbButton a2wHidden">+</div>' +
+                    '<div class="closeButton tbButton">X</div>' +
+                '</div>' +
+                '<div class="productSelectedImageWrapper">' + 
+                    '<img src="" class="productSelectedImage" />' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    var popupUiCss = '' +
+        '<style>' +
+            '.a2wPopupUi .a2wHidden {' +
+                'display : none !important;' +
+            '}' +
+            '.a2wPopupUi {' +
+                'width: 300px;' +
+                'height: 300px;' +
+                'background-color : red;' +
+                'position : relative;' +
+            '}' +
+            '.a2wPopupUi .topMenuBar {' +
+                'position : absolute;' +
+                'top : 0px;' +
+                'min-height : 14px;' +
+                'background-color: white;' +
+                'color : black;' +
+                'width : 100%;' +
+                'height : auto;' +
+            '}' +
+            '.a2wPopupUi .topMenuBar > .tbButton {' +
+                'display : inline-block;' +
+                'float : right;' +
+                'min-width : 30px;' +
+                'text-align : center;' +
+                'padding : 4px;' +
+                'border : 1px solid black;' +
+                'margin : 2px;' +
+            '}' +
+        '</style>';
 
     function mapProductJsonToInputs(productJson){
         var mappings = {
@@ -402,4 +468,9 @@ function ProductDector(opt_DomElementOrSelector){
 var test = new ProductDector();
 test.genericSiteProductDetector();
 console.log(test.getNormalizedProductDetails());
+document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
+    thing.parentElement.remove();
+})
+window.a2wBookmarklet12212018.popupCodeInjected = false
 addToAmazonWishlist().mapProductJsonToInputs(test.getNormalizedProductDetails());
+addToAmazonWishlist().run();
