@@ -73,12 +73,22 @@ function addToAmazonWishlist(debug){
                     '<div class="maximizeButton tbButton a2wHidden">+</div>' +
                 '</div>' +
                 '<div class="popupBody">' +
+                    '<!-- Selected Image -->' +
                     '<div class="productSelectedImageWrapper">' + 
                         '<img src="" class="productSelectedImage dropshadow" />' +
                     '</div>' +
                     '<div class="changeSelectedImageButtonWrapper" style="max-width:140px; margin:auto;">' +
                         '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
                     '</div>' +
+                    '<!-- Change Selected Image Picker -->' +
+                    '<div class="changeSelectedImagePickerWrapper">' +
+                        '<div class="changeSelectedImagePicker">' +
+                            '<div class="imagePickerOptionWrapper selected">' +
+                                '<img src="" class="imagePickerOption" />' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<!-- Product Form -->' +
                     '<div class="productFormWrapper">' +
                         '<div class="productForm">' +
                             '<div class="a2wInputWrapper">' +
