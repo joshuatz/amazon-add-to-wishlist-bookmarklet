@@ -3,7 +3,15 @@
  * @author Joshua Tzucker
  */
 
-function addToAmazonWishlist(debug){
+function addToAmazonWishlist(opt_DomElementOrSelector,debug){
+    // Set scope of future queries
+    this.domScope = document.querySelector('html');
+    if (typeof(opt_DomElementOrSelector)==='object'){
+        this.domScope = opt_DomElementOrSelector;
+    }
+    else if (typeof(opt_DomElementOrSelector)==='string' && document.querySelector(opt_DomElementOrSelector)){
+        this.domScope = document.querySelector(opt_DomElementOrSelector);
+    }
     var globSettingKey = 'a2wBookmarklet12212018';
     var selectedProductDetails = {
         productName : '',
@@ -16,6 +24,7 @@ function addToAmazonWishlist(debug){
         registryID : '',
         type : 'wishlist'
     };
+    var imageSelectorOpen = false;
 
     function getSetting(key){
         window[globSettingKey] = (window[globSettingKey] || {});
@@ -58,7 +67,7 @@ function addToAmazonWishlist(debug){
             setSetting('popupCodeInjected',true);   
         }
         // Autofill popup with scraped product details
-        this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDector();
+        this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDector(this.domScope);
         console.log(this.productDetectorInstance.getNormalizedProductDetails());
         mapProductJsonToInputs(this.productDetectorInstance.getNormalizedProductDetails());
         autofillPopup();
@@ -74,18 +83,17 @@ function addToAmazonWishlist(debug){
                 '</div>' +
                 '<div class="popupBody">' +
                     '<!-- Selected Image -->' +
-                    '<div class="productSelectedImageWrapper">' + 
-                        '<img src="" class="productSelectedImage dropshadow" />' +
-                    '</div>' +
-                    '<div class="changeSelectedImageButtonWrapper" style="max-width:140px; margin:auto;">' +
-                        '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
+                    '<div class="selectedImageTopper">' +
+                        '<div class="productSelectedImageWrapper">' + 
+                            '<img src="" class="productSelectedImage dropshadow" />' +
+                        '</div>' +
+                        '<div class="changeSelectedImageButtonWrapper" style="max-width:140px;">' +
+                            '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
+                        '</div>' +
                     '</div>' +
                     '<!-- Change Selected Image Picker -->' +
                     '<div class="changeSelectedImagePickerWrapper">' +
                         '<div class="changeSelectedImagePicker">' +
-                            '<div class="imagePickerOptionWrapper selected">' +
-                                '<img src="" class="imagePickerOption" />' +
-                            '</div>' +
                         '</div>' +
                     '</div>' +
                     '<!-- Product Form -->' +
@@ -157,10 +165,16 @@ function addToAmazonWishlist(debug){
                 'text-align : center;' +
                 'cursor : pointer;' +
             '}' +
+            '.a2wPopupUi .selectedImageTopper {' +
+                'margin-bottom : 10px;' +
+                'width: 100%;' +
+                'min-height : 180px;' +
+            '}' +
             '.a2wPopupUi .changeSelectedImageButtonWrapper {' +
-                'margin-left:5% !important;' +
-                'width:30%;' +
+                'margin-left:2.5% !important;' +
+                'width:35%;' +
                 'display : inline-block;' +
+                'margin-top : 48px;' +
             '}' +
             '.a2wPopupUi .productSelectedImageWrapper {' +
                 'width:60%;' +
@@ -196,6 +210,31 @@ function addToAmazonWishlist(debug){
             '.a2wPopupUi .dropshadow {' + 
                 'box-shadow: 0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2);' +
             '}' +
+            '.a2wPopupUi .changeSelectedImagePickerWrapper {' +
+                'transition : all 1s;' +
+                '-webkit-transition : all 1s;' +
+                'overflow : hidden;' +
+            '}' +
+            '.a2wPopupUi .imagePickerOptionWrapperWrapper {' +
+                'position : relative;' +
+                'width : 45%;' +
+                'margin-left : 2.5%;' +
+                'display : inline-block;' +
+                'text-align : center;' +
+            '}' +
+            '.a2wPopupUi .imagePickerOptionWrapper.selected, .imagePickerOptionWrapperWrapper.selected {' +
+                'border : 3px solid red;' +
+            '}' +
+            '.a2wPopupUi .imagePickerOptionWrapper {' +
+                'position : absolute;' +
+                'top : 50%;' +
+                '-ms-transform : translateY(-50%);' +
+                'transform : translateY(-50%);' +
+            '}' +
+            '.a2wPopupUi .imagePickerOption {' +
+                'width : 100%;' +
+                'height : auto;' +
+            '}' +
         '</style>';
 
     function toggleVisiblity(selector){
@@ -215,7 +254,7 @@ function addToAmazonWishlist(debug){
         toggleVisiblity('.minimizeButton,.maximizeButton');
         //this.popupDom.querySelector('.popupBody').classList.remove('collapsed');
         //this.popupDom.querySelector('.popupBody').classList.add('expanded');
-        this.popupDom.querySelector('.popupBody').style.maxHeight = '500px';
+        this.popupDom.querySelector('.popupBody').style.maxHeight = '2000px';
     }
 
     var getPopupDom = function(){
@@ -245,6 +284,7 @@ function addToAmazonWishlist(debug){
             // Clear injection status
             setSetting('popupCodeInjected',false);   
         }.bind(this));
+        this.popupDom.querySelector('.changeSelectedImageButton').addEventListener('click',toggleImageSelector.bind(this));
     }
 
     function mapProductJsonToInputs(productJson){
@@ -277,14 +317,93 @@ function addToAmazonWishlist(debug){
         
     }
 
+    function toggleImageSelector(){
+        if (imageSelectorOpen){
+            //closeImageSelector();
+            getPopupDom().querySelector('.changeSelectedImagePickerWrapper').style.maxHeight = '0px';
+            imageSelectorOpen = false;
+            getPopupDom().querySelector('.changeSelectedImageButton').innerText = 'Change Picture';
+        }
+        else {
+            showImageSelector();
+            getPopupDom().querySelector('.changeSelectedImagePickerWrapper').style.maxHeight = '2000px';
+            getPopupDom().querySelector('.changeSelectedImageButton').innerText = 'Use Selected Image';
+        }
+    }
+
     function showImageSelector(primaryImageUrl){
+        primaryImageUrl = (primaryImageUrl || (selectedProductDetails.imageUrl!=='' ? selectedProductDetails.imageUrl : false));
         var imageSrcArr = [];
         if (primaryImageUrl){
             imageSrcArr.push(primaryImageUrl);
         }
+        // Get all image elements on page.
+        var allImgElements = this.domScope.querySelectorAll('img[src]');
+        for (var x=0; x<allImgElements.length; x++){
+            var currImage = allImgElements[x];
+            var skipImage = false;
+            // Skip all images that are smaller than 50x50
+            if (currImage.height < 50 && currImage.width < 50){
+                skipImage = true;
+            }
+            // Skip all images that are using a base64 src
+            if (/base64/gim.test(currImage.src)){
+                skipImage = true;
+            }
+            // Skip image that is already in array!
+            if (imageSrcArr.indexOf(currImage.src)!==-1){
+                skipImage = true;
+            }
+            if (!skipImage){
+                imageSrcArr.push(currImage.src);
+            }
+        }
+        // First, clear out existing HTML
+        var imagePickerArea = getPopupDom().querySelector('.changeSelectedImagePicker');
+        imagePickerArea.innerHTML = '';
+        // Now, iterate through images, wrap each, and add to picker area. Keep track of image size as adding, for use with equal height columns at end
+        var maxImageHeight = 0;
+        for (var x=0; x<imageSrcArr.length; x++){
+            var wrapperWrapper = document.createElement('div');
+            wrapperWrapper.className = 'imagePickerOptionWrapperWrapper' + (x===0 ? ' selected' : '');
+            var wrapper = document.createElement('div');
+            wrapper.className = 'imagePickerOptionWrapper';
+            // Add event listener to wrapper
+            wrapper.addEventListener('click',function(evt){
+                // Clicked image should become "selected" and all others should become "un-selected"
+                var imagePickerArea = getPopupDom().querySelector('.changeSelectedImagePicker');
+                var clickedImage = evt.target.nodeName==='IMG' ? evt.target : evt.target.querySelector('img');
+                imagePickerArea.querySelectorAll('.selected').forEach(function(elem){
+                    elem.classList.remove('selected');
+                });
+                clickedImage.parentElement.parentElement.classList.add('selected');
+                setSelectedImage(clickedImage.src);
+                console.log(evt);
+
+            }.bind(this));
+            var imageElem = document.createElement('img');
+            imageElem.className = 'imagePickerOption';
+            imageElem.src = imageSrcArr[x];
+            wrapper.appendChild(imageElem);
+            wrapperWrapper.appendChild(wrapper);
+            imagePickerArea.appendChild(wrapperWrapper);
+
+            // Check image height
+            if (imageElem.height > maxImageHeight){
+                maxImageHeight = imageElem.height;
+            }
+        }
+        // Force equal height columns
+        getPopupDom().querySelectorAll('.imagePickerOptionWrapperWrapper,.productSelectedImageWrapper').forEach(function(elem){
+            elem.style.minHeight = maxImageHeight + 'px';
+        });
+        // Set flag
+        imageSelectorOpen = true;
     }
+    
 
     function setSelectedImage(imageUrl){
+        getPopupDom().querySelector('img.productSelectedImage').src = imageUrl;
         this.selectedImage = imageUrl;
         selectedProductDetails.imageUrl = imageUrl;
     }
