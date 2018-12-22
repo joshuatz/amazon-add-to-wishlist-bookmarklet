@@ -43,7 +43,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
         if (getSetting('popupCodeInjected')!==true){
             // Put html and css together and inject into page
             var injectionWrapper = document.createElement('div');
-            injectionWrapper.style.zIndex = 999999999999;
+            injectionWrapper.style.zIndex = 99999;
             injectionWrapper.innerHTML = popupUiHtml + '\r\n' + popupUiCss;
             document.querySelector('body').appendChild(injectionWrapper);
             this.popupDom = injectionWrapper;
@@ -108,6 +108,24 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                             '<div class="a2wInputWrapper">' +
                                 '<div class="a2wLabel">Product Price:</div>' +
                                 '<input type="text" name="productPrice" placeholder="$0.00" />' +
+                            '</div>' +
+                            '<div class="a2wInputWrapper">' +
+                                '<div class="a2wLabel">Product Description / Comments:</div>' +
+                                '<textarea name="comment" placeholder="Comments about the product for your wishlist..."></textarea>' +
+                            '</div>' +
+                            '<div class="a2wInputWrapper">' +
+                                '<div class="a2wLabel">Desired Quantity:</div>' +
+                                '<select name="requestedQty">' +
+                                    '<option value="1">1</option>' +
+                                    '<option value="2">2</option>' +
+                                    '<option value="3">3</option>' +
+                                    '<option value="4">4</option>' +
+                                    '<option value="5">5</option>' +
+                                    '<option value="6">6</option>' +
+                                    '<option value="7">7</option>' +
+                                    '<option value="8">8</option>' +
+                                    '<option value="9">9</option>' +
+                                '</select>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -201,7 +219,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'margin:auto;' +
                 'height:auto;' +
             '}' +
-            '.a2wPopupUi .a2wInputWrapper input {' +
+            '.a2wPopupUi .a2wInputWrapper input,.a2wPopupUi .a2wInputWrapper textarea,.a2wPopupUi .a2wInputWrapper select {' +
                 'width:100%;' +
                 'height:auto;' +
                 'background-color: #98c1d9 !important;' +
@@ -271,7 +289,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
 
     function autofillPopup(){
         // Try to autofill by looking up name to productDetails
-        var inputs = getPopupDom().querySelectorAll('.productForm input');
+        var inputs = getPopupDom().querySelectorAll('.productForm input,.productForm textarea');
         for (var x=0; x<inputs.length; x++){
             var input = inputs[x];
             var inputName = input.getAttribute('name');
@@ -284,6 +302,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
     }
 
     function attachEventListeners(){
+        // Toolbar buttons (minimize, maximize, close)
         this.popupDom.querySelector('.minimizeButton').addEventListener('click',minimizePopup.bind(this));
         this.popupDom.querySelector('.maximizeButton').addEventListener('click',maximinizePopup.bind(this));
         this.popupDom.querySelector('.closeButton').addEventListener('click',function(evt){
@@ -292,7 +311,14 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             // Clear injection status
             setSetting('popupCodeInjected',false);   
         }.bind(this));
+        // Change selected image button
         this.popupDom.querySelector('.changeSelectedImageButton').addEventListener('click',toggleImageSelector.bind(this));
+        // Select text in input field on field click
+        this.popupDom.querySelectorAll('.a2wInputWrapper input, .a2wInputWrapper textarea').forEach(function(input){
+            input.addEventListener('click',function(evt){
+                evt.target.select();
+            });
+        });
     }
 
     function mapProductJsonToInputs(productJson){
