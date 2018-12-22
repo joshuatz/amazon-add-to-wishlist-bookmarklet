@@ -18,7 +18,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
         productPrice : '$0.00',
         requestedQty : 1,
         asin : '',
-        productUrl : '',
+        productUrl : document.location.href,
         comment : '',
         imageUrl : '',
         registryID : '',
@@ -115,7 +115,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                             '</div>' +
                             '<div class="a2wInputWrapper">' +
                                 '<div class="a2wLabel">Desired Quantity:</div>' +
-                                '<select name="requestedQty">' +
+                                '<select name="requestedQty" data-forceint>' +
                                     '<option value="1">1</option>' +
                                     '<option value="2">2</option>' +
                                     '<option value="3">3</option>' +
@@ -131,7 +131,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                     '</div>' +
                     '<div class="bottomAreaWrapper">' +
                         '<div class="bottomSubmitButtonWrapper">' +
-                            '<div class="a2wButton a2wSubmitButton">Add to Wishlist!</div>' +
+                            '<div class="a2wButton a2wSubmitButton" data-method="ajax">Ajax</div>' +
+                            '<div class="a2wButton a2wSubmitButton" data-method="newtab">iFrame</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="iframeModalWrapper">' +
@@ -219,7 +220,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'margin-left:2.5% !important;' +
                 'width:35%;' +
                 'display : inline-block;' +
-                'margin-top : 48px;' +
+                'vertical-align: top;' +
+                'margin-top: 19%;' +
             '}' +
             '.a2wPopupUi .productSelectedImageWrapper {' +
                 'width:60%;' +
@@ -325,10 +327,29 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 // Select dropdown
                 else if (input.nodeName==='SELECT'){
                     if (direction==='toPopup'){
-
+                        var desiredVal = selectedProductDetails[inputName];
+                        var matchingIndex = false;
+                        // Search through options for val
+                        var options = input.options;
+                        for (var o=0; o<options.length; o++){
+                            var index = o;
+                            var option = options[index];
+                            if (option.value == desiredVal.toString()){
+                                matchingIndex = index;
+                            }
+                        }
+                        // If match...
+                        if (matchingIndex!==false){
+                            input.selectedIndex = matchingIndex;
+                        }
                     }
                     else if (direction==='fromPopup'){
-                        
+                        var selectedOption = input.selectedOptions[0];
+                        var val = input.selectedOptions[0].value;
+                        if (input.hasAttribute('data-forceint')){
+                            val = parseInt(val,10);
+                        }
+                        selectedProductDetails[inputName] = val;
                     }
                 }
             }
@@ -361,22 +382,49 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             var endpoint = 'https://www.amazon.com/gp/ubp/json/atwl/add';
             gatherFromPopup();
             var formData = selectedProductDetails;
-            endpoint = dataFormToUrl(endpoint,formData);
+            endpoint = this.dataFormToUrl(endpoint,formData);
             this.jsonP(endpoint,function(res){
+                // CORB will block response of JSONP, so there is no way to know if success or fail. Will assume success
                 console.log(res);
+                // Change spinner to finish icon
+                // Close popup
             });
 
         },
-        iframeModalLoad : function(){
+        getNativeWishlistPageUrl : function(){
             var endpoint = 'https://www.amazon.com/wishlist/add/';
             gatherFromPopup();
             var formData = {
-                
-            }
-            endpoint = dataFormToUrl(endpoint,formData);
+                'name.0' : selectedProductDetails.productName,
+                'priceInput' : selectedProductDetails.productPrice,
+                'requestedQty.0' : selectedProductDetails.requestedQty,
+                'productUrl.0' : selectedProductDetails.productUrl,
+                'itemComment.0' : selectedProductDetails.comment,
+                'imageUrl.0' : selectedProductDetails.imageUrl
+            };
+            endpoint = this.dataFormToUrl(endpoint,formData);
+            return endpoint;
+        },
+        iframeModalLoad : function(){
+            var endpoint = this.getNativeWishlistPageUrl();
+            // Load up iframe modal
+            var iframeModal = document.createElement('div');
+            iframeModal.className = 'iframeModal';
+            var iframeElem = document.createElement('iframe');
+            iframeElem.setAttribute('src',endpoint);
+            iframeModal.appendChild(iframeElem);
+            var iframeModalWrapper = getPopupDom().querySelector('.iframeModalWrapper');
+            iframeModalWrapper.innerHTML = '';
+            iframeModalWrapper.appendChild(iframeModal);
+        },
+        openInNewTab : function(){
+            var endpoint = this.getNativeWishlistPageUrl();
+            window.open(endpoint,'_blank');
         },
         jsonP : function(url,callback){
-            callback = (callback || function(){});
+            callback = (callback || function(res){
+                console.log(res);
+            });
             window[callbackName] = function(data) {
                 delete window[callbackName];
                 document.body.removeChild(script);
@@ -387,17 +435,6 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
             document.body.appendChild(script);
         }
-    }
-
-    function submit(){
-        // Check to see if user has customized the inputs
-        gatherFromPopup();
-
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function(){
-
-        }
-
     }
 
     function attachEventListeners(){
@@ -418,13 +455,29 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 evt.target.select();
             });
         });
+        // Submit buttons
+        //@TODO
+        this.popupDom.querySelectorAll('.a2wSubmitButton').forEach(function(button){
+            var method = button.getAttribute('data-method');
+            button.addEventListener('click',function(method){
+                if (method==='iframe'){
+                    submitter.iframeModalLoad();
+                }
+                else if (method==='ajax'){
+                    submitter.ajaxPostSubmit();
+                }
+                else {
+                    submitter.openInNewTab();
+                }
+            }.bind(this,method));
+        });
     }
 
     function mapProductJsonToInputs(productJson){
         var mappings = {
             'productName' : 'productName',
             'productPrice' : 'productPriceUSD',
-            'requestedQty' : null,
+            'requestedQty' : 'productQuantity',
             'asin' : null,
             'productUrl' : 'productUrl',
             'comment' : 'productDescription',
@@ -441,10 +494,6 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             }
         }
         return selectedProductDetails;
-    }
-
-    function specificSiteProductDetector(site){
-        
     }
 
     function toggleImageSelector(){
@@ -567,9 +616,11 @@ function ProductDector(opt_DomElementOrSelector){
         productPriceAmount : 0,
         productPriceUSD : '$0.00',
         productImageUrl : '',
+        productPageUrl : document.location.href,
         productDescription : '',
         productAvailability : 'instock',
-        productSku : ''
+        productSku : '',
+        productQuantity : 0
     };
 
     // Generic querySelectors for product info - search is using order of array, so best selectors should come first
@@ -664,6 +715,11 @@ function ProductDector(opt_DomElementOrSelector){
                 },
                 {
                     selector : '[itemprop="gtin13"]'
+                }
+            ],
+            productQuantity : [
+                {
+                    selector : '[class*="QuantityPicker"] .select--customLabel [class^="SelectBox__ReactiveText"] span'
                 }
             ]
         }
