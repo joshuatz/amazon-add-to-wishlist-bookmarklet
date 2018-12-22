@@ -42,6 +42,11 @@ function addToAmazonWishlist(debug){
             // Store injection status so UI is not reinjected if bookmarklet is run again
             setSetting('popupCodeInjected',true);   
         }
+        // Autofill popup with scraped product details
+        this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDector();
+        console.log(this.productDetectorInstance.getNormalizedProductDetails());
+        mapProductJsonToInputs(this.productDetectorInstance.getNormalizedProductDetails());
+        autofillPopup();
     }
 
     var popupUiHtml = '' +
@@ -55,6 +60,21 @@ function addToAmazonWishlist(debug){
                 '<div class="popupBody">' +
                     '<div class="productSelectedImageWrapper">' + 
                         '<img src="" class="productSelectedImage" />' +
+                    '</div>' +
+                    '<div class="changeSelectedImageButtonWrapper" style="max-width:140px; margin:auto;">' +
+                        '<div class="changeSelectedImageButton a2wButton">Change Picture</div>' +
+                    '</div>' +
+                    '<div class="productFormWrapper">' +
+                        '<div class="productForm">' +
+                            '<div class="a2wInputWrapper">' +
+                                '<div class="a2wLabel">Product Name:</div>' +
+                                '<input type="text" name="productName" placeholder="Product Name" />' +
+                            '</div>' +
+                            '<div class="a2wInputWrapper">' +
+                                '<div class="a2wLabel">Product Price:</div>' +
+                                '<input type="text" name="productPrice" placeholder="$0.00" />' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -71,8 +91,6 @@ function addToAmazonWishlist(debug){
                 'position : relative;' +
             '}' +
             '.a2wPopupUi .topMenuBar {' +
-                'position : absolute;' +
-                'top : 0px;' +
                 'min-height : 14px;' +
                 'background-color: white;' +
                 'color : black;' +
@@ -87,12 +105,55 @@ function addToAmazonWishlist(debug){
                 'padding : 4px;' +
                 'border : 1px solid black;' +
                 'margin : 2px;' +
+                'cursor : pointer;' +
             '}' +
             '.a2wPopupUi .popupBody {' +
                 'transition : all 1s;' +
                 '-webkit-transition : all 1s;' +
                 'background-color : red;' +
-                'height : 300px;' +
+                'min-height : 300px;' +
+                'width : 100%;' +
+                'overflow : hidden;' +
+            '}' +
+            '.a2wPopupUi .a2wButton {' +
+                'padding : 4px;' +
+                'border-radius : 4px;' +
+                'background-color : white;' +
+                'border : 2px ridge black;' +
+                'width : auto;' +
+                'margin : auto;' +
+                'text-align : center;' +
+                'cursor : pointer;' +
+            '}' +
+            '.a2wPopupUi .changeSelectedImageButtonWrapper {' +
+                'margin-left:5% !important;' +
+                'width:30%;' +
+                'display : inline-block;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper {' +
+                'width:60%;' +
+                'display : inline-block;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper img {' +
+                'width:100%;' +
+                'height:auto;' +
+            '}' +
+            '.a2wPopupUi .a2wInputWrapper {' +
+                'width:95%;' +
+                'margin:auto;' +
+                'height:auto;' +
+            '}' +
+            '.a2wPopupUi .a2wInputWrapper input {' +
+                'width:100%;' +
+                'height:auto;' +
+            '}' +
+            '.a2wPopupUi .a2wInputWrapper .a2wLabel {' +
+                'width:100%;' +
+                'height:auto;' +
+                'display: inline;' +
+                'color: white;' +
+                'vertical-align: baseline;' +
+                'font-size: 0.8rem;' +
             '}' +
         '</style>';
 
@@ -109,6 +170,24 @@ function addToAmazonWishlist(debug){
     function maximinizePopup(){
         toggleVisiblity('.minimizeButton,.maximizeButton');
         this.popupDom.querySelector('.popupBody').style.height = '';
+    }
+
+    var getPopupDom = function(){
+        return this.popupDom;
+    }.bind(this);
+
+    function autofillPopup(){
+        // Try to autofill by looking up name to productDetails
+        var inputs = getPopupDom().querySelectorAll('.productForm input');
+        for (var x=0; x<inputs.length; x++){
+            var input = inputs[x];
+            var inputName = input.getAttribute('name');
+            if (inputName in selectedProductDetails){
+                input.value = selectedProductDetails[inputName];
+            }
+        }
+        // Fill in picture section
+        getPopupDom().querySelector('.productSelectedImage').setAttribute('src',selectedProductDetails.imageUrl);
     }
 
     function attachEventListeners(){
@@ -178,6 +257,7 @@ function addToAmazonWishlist(debug){
 
 function ProductDector(opt_DomElementOrSelector){
     // Set scope of future queries
+    this.hasScraped = false;
     this.domScope = document.querySelector('html');
     if (typeof(opt_DomElementOrSelector)==='object'){
         this.domScope = opt_DomElementOrSelector;
@@ -409,7 +489,7 @@ function ProductDector(opt_DomElementOrSelector){
     
                 // Save
                 productDetails.productPriceAmount = price;
-                productDetails.productPriceUSD = '$' + price.toString();
+                productDetails.productPriceUSD = '$' + price.toFixed(2);
                 return price;
             }
             return false;
@@ -491,6 +571,7 @@ function ProductDector(opt_DomElementOrSelector){
         this.getPriceInfo();
         this.getRegularDetails();
         this.tryLdJson();
+        this.hasScraped = true;
         return productDetails;
     };
 
@@ -499,6 +580,9 @@ function ProductDector(opt_DomElementOrSelector){
     }
     // @TODO
     this.getNormalizedProductDetails = function(){
+        if (!this.hasScraped){
+            this.genericSiteProductDetector();
+        }
         var normalizedProductDetails = productDetails;
         // @TODO
         return normalizedProductDetails;
@@ -511,6 +595,7 @@ console.log(test.getNormalizedProductDetails());
 document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
     thing.parentElement.remove();
 })
+window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
 window.a2wBookmarklet12212018.popupCodeInjected = false
 addToAmazonWishlist().mapProductJsonToInputs(test.getNormalizedProductDetails());
 addToAmazonWishlist().run();
