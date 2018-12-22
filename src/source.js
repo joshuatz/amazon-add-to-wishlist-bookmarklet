@@ -83,12 +83,14 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 '</div>' +
                 '<div class="popupBody">' +
                     '<!-- Selected Image -->' +
-                    '<div class="selectedImageTopper">' +
-                        '<div class="productSelectedImageWrapper">' + 
-                            '<img src="" class="productSelectedImage dropshadow" />' +
-                        '</div>' +
-                        '<div class="changeSelectedImageButtonWrapper" style="max-width:140px;">' +
-                            '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
+                    '<div class="selectedImageTopperWrapper">' +
+                        '<div class="selectedImageTopper">' +
+                            '<div class="productSelectedImageWrapper">' + 
+                                '<img src="" class="productSelectedImage dropshadow" />' +
+                            '</div>' +
+                            '<div class="changeSelectedImageButtonWrapper" style="max-width:140px;">' +
+                                '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
                     '<!-- Change Selected Image Picker -->' +
@@ -124,11 +126,11 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'position : relative;' +
                 'border : 2px solid black;' +
                 'padding : 4px;' +
-                'background-color : #bcd8c1;' +
+                'background-color : #98c1d9;' +
             '}' +
             '.a2wPopupUi .topMenuBar {' +
                 'min-height : 14px;' +
-                'background-color: #bcd8c1;' +
+                'background-color: #98c1d9;' +
                 'color : black;' +
                 'width : 100%;' +
                 'height : auto;' +
@@ -144,7 +146,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'margin : 2px;' +
                 'cursor : pointer;' +
                 'background-color : #007991;' +
-                'color : #bcd8c1;' +
+                'color : #98c1d9;' +
             '}' +
             '.a2wPopupUi .popupBody {' +
                 'transition : all 1s;' +
@@ -165,10 +167,16 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'text-align : center;' +
                 'cursor : pointer;' +
             '}' +
+            '.a2wPopupUi .selectedImageTopperWrapper {' + 
+                'background-color : #98c1d9;' +
+            '}' +
             '.a2wPopupUi .selectedImageTopper {' +
                 'margin-bottom : 10px;' +
                 'width: 100%;' +
                 'min-height : 180px;' +
+                'background-color : #ffffff;' +
+                'border-top-left-radius : 16px;' +
+                'border-top-right-radius : 16px;' +
             '}' +
             '.a2wPopupUi .changeSelectedImageButtonWrapper {' +
                 'margin-left:2.5% !important;' +
@@ -181,9 +189,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 'display : inline-block;' +
             '}' +
             '.a2wPopupUi .productSelectedImageWrapper img {' +
-                'width:95%;' +
+                'width:84%;' +
                 'height:auto;' +
-                'margin:2.5%;' +
+                'margin:8%;' +
             '}' +
             '.a2wPopupUi .productFormWrapper {' +
                 'margin-bottom:10px;' +
@@ -196,7 +204,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             '.a2wPopupUi .a2wInputWrapper input {' +
                 'width:100%;' +
                 'height:auto;' +
-                'background-color: #bcd8c1 !important;' +
+                'background-color: #98c1d9 !important;' +
                 'color: black !important;' +
             '}' +
             '.a2wPopupUi .a2wInputWrapper .a2wLabel {' +
@@ -394,7 +402,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             }
         }
         // Force equal height columns
-        getPopupDom().querySelectorAll('.imagePickerOptionWrapperWrapper,.productSelectedImageWrapper').forEach(function(elem){
+        getPopupDom().querySelectorAll('.imagePickerOptionWrapperWrapper').forEach(function(elem){
             elem.style.minHeight = maxImageHeight + 'px';
         });
         // Set flag
