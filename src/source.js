@@ -6,7 +6,6 @@
 // ==Bookmarklet==
 // @name a2w-bookmarklet
 // @author Joshua Tzucker
-// @script ..\node_modules\draggabilly\dist\draggabilly.pkgd.js
 // ==/Bookmarklet==
 
 function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
@@ -57,8 +56,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             injectionWrapper.style.position = 'fixed';
             injectionWrapper.style.top = '20px';
             injectionWrapper.style.right = '20px';
-            if (typeof(Draggabilly)==='function'){
-                var draggie  = new Draggabilly(this.popupDom,{
+            if (typeof(window['Draggabilly'])==='function'){
+                var draggie  = new window.Draggabilly(this.popupDom,{
 
                 });
                 var browserWidth = parseFloat(getComputedStyle(document.body).width.replace('px',''));

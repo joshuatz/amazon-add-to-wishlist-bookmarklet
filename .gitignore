@@ -1,4 +1,6 @@
 # NPM
 node_modules
+# Intermediate combo
+bookmarklet_raw_combined.js
 # Output
 bookmarklet_export.js

@@ -5,11 +5,14 @@
   "main": "source.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build" : "bookmarklet source.js bookmarklet_export.js"
+    "combine-dependencies" : "concat -o bookmarklet_raw_combined.js ./src/source.js ./node_modules/draggabilly/dist/draggabilly.pkgd.js",
+    "build": "npm run combine-dependencies && bookmarklet bookmarklet_raw_combined.js bookmarklet_export.js"
   },
   "author": "Joshua Tzucker",
   "license": "ISC",
   "dependencies": {
-    "bookmarklet": "^1.0.2"
+    "bookmarklet": "^1.0.2",
+    "concat": "^1.0.3",
+    "draggabilly": "^2.2.0"
   }
 }
