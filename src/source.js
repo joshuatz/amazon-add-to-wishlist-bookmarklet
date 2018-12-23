@@ -137,6 +137,15 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                     '</div>' +
                     '<div class="iframeModalWrapper">' +
                     '</div>' +
+                    '<div class="loadingIndicatorWrapper">' +
+                        '<div class="loadingIndicatorAnimationWrapper">' +
+                            '<div class="loadingIndicatorAnimation">' +
+                                '<div class="a2wSvgWrapper rotating">' +
+                                    '<?xml version="1.0" ?><svg id="Layer_1" style="enable-background:new 0 0 100.4 100.4;" version="1.1" viewBox="0 0 100.4 100.4" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M76.9,23.1l1.1-4.2h4.8c0.9,0,1.6-0.7,1.6-1.6v-7c0-0.9-0.7-1.6-1.6-1.6H17.5c-0.9,0-1.6,0.7-1.6,1.6v7  c0,0.9,0.7,1.6,1.6,1.6h4.8l1.1,4.2C26.2,34.7,34.5,43.9,45.7,48v3.8c-11.1,4.1-19.4,13.3-22.3,24.9L22,81.9h-4.5  c-0.9,0-1.6,0.7-1.6,1.6v7c0,0.9,0.7,1.6,1.6,1.6h65.3c0.9,0,1.6-0.7,1.6-1.6v-7c0-0.9-0.7-1.6-1.6-1.6h-4.5l-1.3-5.3  C74,65.1,65.7,55.9,54.6,51.8V48C65.7,43.9,74,34.7,76.9,23.1z M19.1,11.9h62v3.7h-62V11.9z M81.2,88.9h-62v-3.7h62V88.9z   M52.6,54.3C63.3,57.8,71.3,66.5,74,77.4l1.1,4.5h-50l1.1-4.5C29,66.5,37,57.8,47.6,54.3c0.6-0.2,1-0.8,1-1.4v-5.9  c0-0.6-0.4-1.2-1-1.4C37,41.9,29,33.3,26.3,22.4l-0.9-3.5h49.5L74,22.4c-2.7,10.9-10.7,19.5-21.4,23.1c-0.6,0.2-1,0.8-1,1.4v5.9  C51.6,53.5,52,54.1,52.6,54.3z"/></svg>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -281,6 +290,64 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             '.a2wPopupUi .imagePickerOption {' +
                 'width : 100%;' +
                 'height : auto;' +
+            '}' +
+            '.a2wPopupUi .loadingIndicatorWrapper {' +
+                'display : block;' +
+                'position : absolute;' +
+                'top : 0px;' +
+                'left : 0px;' +
+                'width : 100%;' +
+                'height : calc(100% - 40px);' +
+                'margin-top : 40px;' +
+                'z-index : 999;' +
+                'cursor : not-allowed;' +
+                'background-color : rgba(152, 193, 217, 0.86);' +
+            '}' +
+            '.a2wPopupUi .loadingIndicatorAnimationWrapper {' +
+                'position : relative;' +
+                'width : 100%;' +
+                'height : 100%;' +
+            '}' +
+            '.a2wPopupUi .loadingIndicatorAnimation {' +
+                'position: absolute;' +
+                'top: 50%;' +
+                'left: 50%;' +
+                'transform: translate(-50%, -50%);' +
+            '}' +
+            '.a2wPopupUi .loadingIndicatorAnimation .a2wSvgWrapper {' +
+                'width : 100%;' +
+                'height : auto;' +
+                'min-width : 150px;' +
+            '}' +
+            '.rotating {' +
+                'animation: rotating 2s infinite linear;' +
+                '-webkit-animation: rotating 2s infinite linear;' +
+            '}' +
+            '@keyframes rotating {' +
+                '0% {' +
+                    'transform: rotate(0deg);' +
+                    '-webkit-transform: rotate(0deg);' +
+                '}' +
+                '20% {' +
+                    'transform: rotate(5deg);' +
+                    '-webkit-transform: rotate(5deg);' +
+                '}' +
+                '40% {' +
+                    'transform: rotate(10deg);' +
+                    '-webkit-transform: rotate(10deg);' +
+                '}' +
+                '60% {' +
+                    'transform: rotate(40deg);' +
+                    '-webkit-transform: rotate(40deg);' +
+                '}' +
+                '80% {' +
+                    'transform: rotate(100deg);' +
+                    '-webkit-transform: rotate(100deg);' +
+                '}' +
+                '100% {' +
+                    'transform: rotate(359deg);' +
+                    '-webkit-transform: rotate(359deg);' +
+                '}' +
             '}' +
         '</style>';
 
