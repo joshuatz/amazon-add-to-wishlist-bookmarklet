@@ -5,7 +5,7 @@
   "main": "source.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "combine-dependencies": "concat -o ./build/bookmarklet_raw_combined.js ./src/source.js ./node_modules/draggabilly/dist/draggabilly.pkgd.js",
+    "combine-dependencies": "concat -o ./build/bookmarklet_raw_combined.js ./node_modules/draggabilly/dist/draggabilly.pkgd.js ./src/source.js",
     "build-bookmarklet": "npm run combine-dependencies && bookmarklet ./build/bookmarklet_raw_combined.js ./build/bookmarklet_export.js",
     "build": "npm run build-bookmarklet && node install-build.js"
   },
