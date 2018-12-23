@@ -3,7 +3,7 @@
  * @author Joshua Tzucker
  */
 
-function addToAmazonWishlist(opt_DomElementOrSelector,debug){
+function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
     // Set scope of future queries
     this.domScope = document.querySelector('html');
     if (typeof(opt_DomElementOrSelector)==='object'){
@@ -62,7 +62,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                 injectionWrapper.style.right = '20px';
             }
             // Add event listeners for UI
-            attachEventListeners();
+            attachEventListeners.bind(this)();
             // Store injection status so UI is not reinjected if bookmarklet is run again
             setSetting('popupCodeInjected',true);   
         }
@@ -70,6 +70,10 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
         this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDector(this.domScope);
         console.log(this.productDetectorInstance.getNormalizedProductDetails());
         mapProductJsonToInputs(this.productDetectorInstance.getNormalizedProductDetails());
+        // If registryId is not set, disable the ajax option
+        if(typeof(selectedProductDetails.registryID)!=='string' || selectedProductDetails.registryID===''){
+            getPopupDom().querySelector('[data-method="ajax"]').classList.add('a2wHidden');
+        }
         autofillPopup('toPopup');
     }
 
@@ -131,17 +135,20 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                     '</div>' +
                     '<div class="bottomAreaWrapper">' +
                         '<div class="bottomSubmitButtonWrapper">' +
-                            '<div class="a2wButton a2wSubmitButton" data-method="ajax">Ajax</div>' +
-                            '<div class="a2wButton a2wSubmitButton" data-method="newtab">iFrame</div>' +
+                            '<div class="a2wButton a2wSubmitButton" data-method="ajax">Add (Same Tab)</div>' +
+                            '<div class="a2wButton a2wSubmitButton" data-method="newtab">Add (New Tab)</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="iframeModalWrapper">' +
                     '</div>' +
-                    '<div class="loadingIndicatorWrapper">' +
+                    '<div class="loadingIndicatorWrapper a2wHidden">' +
                         '<div class="loadingIndicatorAnimationWrapper">' +
                             '<div class="loadingIndicatorAnimation">' +
-                                '<div class="a2wSvgWrapper rotating">' +
+                                '<div class="a2wSvgWrapper rotating a2wLoadingSvg">' +
                                     '<?xml version="1.0" ?><svg id="Layer_1" style="enable-background:new 0 0 100.4 100.4;" version="1.1" viewBox="0 0 100.4 100.4" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M76.9,23.1l1.1-4.2h4.8c0.9,0,1.6-0.7,1.6-1.6v-7c0-0.9-0.7-1.6-1.6-1.6H17.5c-0.9,0-1.6,0.7-1.6,1.6v7  c0,0.9,0.7,1.6,1.6,1.6h4.8l1.1,4.2C26.2,34.7,34.5,43.9,45.7,48v3.8c-11.1,4.1-19.4,13.3-22.3,24.9L22,81.9h-4.5  c-0.9,0-1.6,0.7-1.6,1.6v7c0,0.9,0.7,1.6,1.6,1.6h65.3c0.9,0,1.6-0.7,1.6-1.6v-7c0-0.9-0.7-1.6-1.6-1.6h-4.5l-1.3-5.3  C74,65.1,65.7,55.9,54.6,51.8V48C65.7,43.9,74,34.7,76.9,23.1z M19.1,11.9h62v3.7h-62V11.9z M81.2,88.9h-62v-3.7h62V88.9z   M52.6,54.3C63.3,57.8,71.3,66.5,74,77.4l1.1,4.5h-50l1.1-4.5C29,66.5,37,57.8,47.6,54.3c0.6-0.2,1-0.8,1-1.4v-5.9  c0-0.6-0.4-1.2-1-1.4C37,41.9,29,33.3,26.3,22.4l-0.9-3.5h49.5L74,22.4c-2.7,10.9-10.7,19.5-21.4,23.1c-0.6,0.2-1,0.8-1,1.4v5.9  C51.6,53.5,52,54.1,52.6,54.3z"/></svg>' +
+                                '</div>' +
+                                '<div class="a2wSvgWrapper a2wHidden a2wSuccessSvg">' +
+                                    '<?xml version="1.0" ?><svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#222E50" id="Core" transform="translate(-465.000000, -45.000000)"><g id="check-box" transform="translate(465.000000, 45.000000)"><path d="M16,0 L2,0 C0.9,0 0,0.9 0,2 L0,16 C0,17.1 0.9,18 2,18 L16,18 C17.1,18 18,17.1 18,16 L18,2 C18,0.9 17.1,0 16,0 L16,0 Z M7,14 L2,9 L3.4,7.6 L7,11.2 L14.6,3.6 L16,5 L7,14 L7,14 Z" id="Shape"/></g></g></g></svg>' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +
@@ -195,7 +202,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             '.a2wPopupUi .a2wButton {' +
                 'padding : 4px;' +
                 'border-radius : 4px;' +
-                'background-color : white;' +
+                'background-color : white !important;' +
+                'color : black !important;' +
                 'border : 2px ridge black;' +
                 'width : auto;' +
                 'margin : auto;' +
@@ -436,31 +444,69 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
     }
 
     var submitter = {
+        getLoaderElem : function(){
+            return getPopupDom().querySelector('.loadingIndicatorWrapper');
+        },
+        showLoader : function(){
+            this.getLoaderElem().classList.remove('a2wHidden');
+            this.getLoaderElem().querySelector('.a2wLoadingSvg').classList.remove('a2wHidden');
+            this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.add('a2wHidden');
+        },
+        showLoaderComplete : function(){
+            this.getLoaderElem().querySelector('.a2wLoadingSvg').classList.add('a2wHidden');
+            this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.remove('a2wHidden');
+        },
+        hideLoader : function(){
+            this.getLoaderElem().classList.add('a2wHidden');
+        },
         dataFormToUrl : function(baseUrl,formDataObj){
             finalUrl = baseUrl;
             for (var prop in formDataObj){
                 var val = formDataObj[prop];
-                var pair = encodeURI(prop) + '=' + encodeURI(val);
+                var pair = encodeURIComponent(prop) + '=' + encodeURIComponent(val);
                 finalUrl = finalUrl + (finalUrl.indexOf('?')!==-1 ? '&' : '?') + pair;
             }
             return finalUrl;
         },
         ajaxPostSubmit : function(){
+            this.showLoader();
             var endpoint = 'https://www.amazon.com/gp/ubp/json/atwl/add';
             gatherFromPopup();
-            var formData = selectedProductDetails;
+            // Mapping
+            var formData = {
+                name : selectedProductDetails.productName,
+                price : selectedProductDetails.productPrice,
+                requestedQty : selectedProductDetails.requestedQty,
+                asin : selectedProductDetails.asin,
+                productUrl : selectedProductDetails.productUrl,
+                comment : selectedProductDetails.comment,
+                imageUrl : selectedProductDetails.imageUrl,
+                registryID : selectedProductDetails.registryID,
+                type : selectedProductDetails.type
+            };
             endpoint = this.dataFormToUrl(endpoint,formData);
             this.jsonP(endpoint,function(res){
-                // CORB will block response of JSONP, so there is no way to know if success or fail. Will assume success
+                // CORB will block response of JSONP, so there is no way to know if success or fail. THIS CODE WILL NOT BE REACHED UNLESS OUTSIDE CHROME OR CORB / CORS POLICY CHANGES
                 console.log(res);
-                // Change spinner to finish icon
-                // Close popup
+                setTimeout(function(){
+                    ajaxDoneAction();
+                },500);
             });
-
+            // Since CORB will stop callback on above, just use timeout
+            setTimeout(function(){
+                this.ajaxDoneAction();
+            }.bind(this),600);
+        },
+        ajaxDoneAction : function(){
+            this.showLoaderComplete();
+            setTimeout(function(){
+                removePopup();
+            },600);
         },
         getNativeWishlistPageUrl : function(){
             var endpoint = 'https://www.amazon.com/wishlist/add/';
             gatherFromPopup();
+            // Mapping
             var formData = {
                 'name.0' : selectedProductDetails.productName,
                 'priceInput' : selectedProductDetails.productPrice,
@@ -492,6 +538,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
             callback = (callback || function(res){
                 console.log(res);
             });
+            var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
             window[callbackName] = function(data) {
                 delete window[callbackName];
                 document.body.removeChild(script);
@@ -504,15 +551,19 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
         }
     }
 
+    function removePopup(){
+        // Remove popup
+        getPopupDom().remove();
+        // Clear injection status
+        setSetting('popupCodeInjected',false); 
+    }
+
     function attachEventListeners(){
         // Toolbar buttons (minimize, maximize, close)
         this.popupDom.querySelector('.minimizeButton').addEventListener('click',minimizePopup.bind(this));
         this.popupDom.querySelector('.maximizeButton').addEventListener('click',maximinizePopup.bind(this));
         this.popupDom.querySelector('.closeButton').addEventListener('click',function(evt){
-            // Remove popup
-            this.popupDom.remove();
-            // Clear injection status
-            setSetting('popupCodeInjected',false);   
+              removePopup();
         }.bind(this));
         // Change selected image button
         this.popupDom.querySelector('.changeSelectedImageButton').addEventListener('click',toggleImageSelector.bind(this));
@@ -559,6 +610,16 @@ function addToAmazonWishlist(opt_DomElementOrSelector,debug){
                     selectedProductDetails[key] = productJson[mapping];
                 }
             }
+        }
+        // Check for wishlist id
+        if (typeof(opt_WishlistId)==='string'){
+            selectedProductDetails.registryID = opt_WishlistId;
+        }
+        else if (getSetting('registryId')){
+            selectedProductDetails.registryID = getSetting('registryId');
+        }
+        else if (getSetting('registryID')){
+            selectedProductDetails.registryID = getSetting('registryID');
         }
         return selectedProductDetails;
     }
@@ -671,7 +732,7 @@ function ProductDector(opt_DomElementOrSelector){
     // Set scope of future queries
     this.hasScraped = false;
     this.domScope = document.querySelector('html');
-    if (typeof(opt_DomElementOrSelector)==='object'){
+    if (typeof(opt_DomElementOrSelector)==='object' && opt_DomElementOrSelector!==null){
         this.domScope = opt_DomElementOrSelector;
     }
     else if (typeof(opt_DomElementOrSelector)==='string' && document.querySelector(opt_DomElementOrSelector)){
@@ -1015,6 +1076,10 @@ document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
     thing.parentElement.remove();
 })
 window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
-window.a2wBookmarklet12212018.popupCodeInjected = false
-addToAmazonWishlist().mapProductJsonToInputs(test.getNormalizedProductDetails());
-addToAmazonWishlist().run();
+window.a2wBookmarklet12212018.popupCodeInjected = false;
+//window.a2wBookmarklet12212018.registryID = '';
+
+//var a2w = new addToAmazonWishlist();
+var a2w = new addToAmazonWishlist(null,null,true);
+a2w.mapProductJsonToInputs(test.getNormalizedProductDetails());
+a2w.run();
