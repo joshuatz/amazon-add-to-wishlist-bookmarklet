@@ -3,6 +3,12 @@
  * @author Joshua Tzucker
  */
 
+// ==Bookmarklet==
+// @name a2w-bookmarklet
+// @author Joshua Tzucker
+// @script ..\node_modules\draggabilly\dist\draggabilly.pkgd.js
+// ==/Bookmarklet==
+
 function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
     // Set scope of future queries
     this.domScope = document.querySelector('html');
