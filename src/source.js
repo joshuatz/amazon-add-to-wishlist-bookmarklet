@@ -56,7 +56,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             injectionWrapper.style.position = 'fixed';
             injectionWrapper.style.top = '20px';
             injectionWrapper.style.right = '20px';
-            if (typeof(window['Draggabilly'])==='function'){
+            if (typeof(window.Draggabilly)==='function'){
                 var draggie  = new window.Draggabilly(this.popupDom,{
 
                 });
@@ -569,7 +569,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
             document.body.appendChild(script);
         }
-    }
+    };
 
     /**
      * Removes the ENTIRE popup element
@@ -631,7 +631,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             'imageUrl' : 'productImageUrl',
             'registryID' : null,
             'type' : null
-        }
+        };
         for (var key in mappings) {
             if (mappings.hasOwnProperty(key)) {
                 var mapping = mappings[key];
@@ -965,9 +965,9 @@ function ProductDetector(opt_DomElementOrSelector){
      */
     var helpers = {
         iterateOver : function(thing,callback,callbackArgs){
-            callbackArgs = (callbackArgs || {})
+            callbackArgs = (callbackArgs || {});
             callback = (callback || function(){});
-            iterationArr = [];
+            var iterationArr = [];
             if (thing){
                 if (Array.isArray(thing)){
                     thing.forEach(function(subThing){
@@ -1033,7 +1033,7 @@ function ProductDetector(opt_DomElementOrSelector){
             }
             return false;
         }
-    }
+    };
 
     /**
      * Attempts to find product LD-JSON schema in the page or product area
@@ -1107,7 +1107,7 @@ function ProductDetector(opt_DomElementOrSelector){
         if (productLdJson){
             this.parseProductLdJson(productLdJson);
         }
-    }
+    };
     this.specificSiteProductDetector = function(site){
         if (site === 'shopify'){
             //@TODO
@@ -1132,7 +1132,7 @@ function ProductDetector(opt_DomElementOrSelector){
         var normalizedProductDetails = productDetails;
         // @TODO
         return normalizedProductDetails;
-    }
+    };
 }
 
 var test = new ProductDetector();
@@ -1140,7 +1140,7 @@ test.genericSiteProductDetector();
 console.log(test.getNormalizedProductDetails());
 document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
     thing.parentElement.remove();
-})
+});
 window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
 window.a2wBookmarklet12212018.popupCodeInjected = false;
 //window.a2wBookmarklet12212018.registryID = '';
