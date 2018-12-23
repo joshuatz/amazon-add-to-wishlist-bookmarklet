@@ -1,0 +1,7 @@
+{
+    "jshint.exclude": {
+        "**\\bookmarklet_export.js" : true
+    },
+    "typescript.validate.enable": false,
+    "tslint.jsEnable" : false
+}
