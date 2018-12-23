@@ -94,8 +94,11 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                     '<!-- Selected Image -->' +
                     '<div class="selectedImageTopperWrapper">' +
                         '<div class="selectedImageTopper">' +
-                            '<div class="productSelectedImageWrapper">' + 
+                            '<div class="productSelectedImageWrapper" data-hasimage="no">' + 
                                 '<img src="" class="productSelectedImage dropshadow" />' +
+                                '<div class="noImageFound">' +
+                                    '<span style="font-size:large; color:red;">No Suitable Image Found</span>' +
+                                '</div>' +
                             '</div>' +
                             '<div class="changeSelectedImageButtonWrapper" style="max-width:140px;">' +
                                 '<div class="changeSelectedImageButton a2wButton dropshadow">Change Picture</div>' +
@@ -252,11 +255,29 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             '.a2wPopupUi .productSelectedImageWrapper {' +
                 'width:60%;' +
                 'display : inline-block;' +
+                'position : relative;' +
             '}' +
             '.a2wPopupUi .productSelectedImageWrapper img {' +
                 'width:84%;' +
                 'height:auto;' +
                 'margin:8%;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper .noImageFound {' +
+                'position : absolute;' +
+                'text-align:center;' +
+                'top : 57px;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper[data-hasimage="no"] .productSelectedImage {' +
+                'display : none;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper[data-hasimage="no"] .noImageFound {' +
+                'display : unset;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper[data-hasimage="yes"] .productSelectedImage {' +
+                'display : unset;' +
+            '}' +
+            '.a2wPopupUi .productSelectedImageWrapper[data-hasimage="yes"] .noImageFound {' +
+                'display : none;' +
             '}' +
             '.a2wPopupUi .productFormWrapper {' +
                 'margin-bottom:10px;' +
@@ -369,18 +390,18 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         '</style>';
 
     function toggleVisiblity(selector){
-        this.popupDom.querySelectorAll(selector).forEach(function(elem){
+        getPopupDom().querySelectorAll(selector).forEach(function(elem){
             elem.classList.toggle('a2wHidden');
         });
     }
 
     function minimizePopup(){
         toggleVisiblity('.minimizeButton,.maximizeButton');
-        this.popupDom.querySelector('.popupBody').style.maxHeight = '0px';
+        getPopupDom().querySelector('.popupBody').style.maxHeight = '0px';
     }
     function maximinizePopup(){
         toggleVisiblity('.minimizeButton,.maximizeButton');
-        this.popupDom.querySelector('.popupBody').style.maxHeight = '2000px';
+        getPopupDom().querySelector('.popupBody').style.maxHeight = '2000px';
     }
 
     var getPopupDom = function(){
@@ -444,6 +465,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 var imageSrcs = generateImgSrcArrFromPage();
                 if (imageSrcs.length > 0){
                     setSelectedImage(imageSrcs[0]);
+                }
+                else {
+                    setSelectedImage(null);
                 }
             }
             
@@ -760,9 +784,16 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
      * @param {string} imageUrl - the URL of the image to set as the selected image
      */
     var setSelectedImage = function(imageUrl){
-        getPopupDom().querySelector('img.productSelectedImage').src = imageUrl;
-        this.selectedImage = imageUrl;
-        selectedProductDetails.imageUrl = imageUrl;
+        if (imageUrl && imageUrl!=='' && imageUrl!==null){
+            getPopupDom().querySelector('.productSelectedImageWrapper').setAttribute('data-hasimage','yes');
+            getPopupDom().querySelector('img.productSelectedImage').src = imageUrl;
+            this.selectedImage = imageUrl;
+            selectedProductDetails.imageUrl = imageUrl;
+        }
+        else {
+            getPopupDom().querySelector('.productSelectedImageWrapper').setAttribute('data-hasimage','no');
+            getPopupDom().querySelector('img.productSelectedImage').src = '';
+        }
     }.bind(this);
 
     /**
@@ -775,7 +806,16 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         maximinizePopup : maximinizePopup.bind(this)
     };
 }
+/**
+ * =========== End of addToAmazonWishlist ===========
+ */
 
+
+
+
+/**
+ * =========== Start of ProductDetector ===========
+ */
 function ProductDetector(opt_DomElementOrSelector){
     // Set scope of future queries
     this.hasScraped = false;
@@ -921,8 +961,11 @@ function ProductDetector(opt_DomElementOrSelector){
                     if (match.hasAttribute('content') && match.getAttribute('content')!==''){
                         return match.getAttribute('content');
                     }
-                    else {
+                    else if (match.innerText) {
                         return match.innerText.trim();
+                    }
+                    else {
+                        return '';
                     }
                 }
             }
@@ -1146,6 +1189,6 @@ window.a2wBookmarklet12212018.popupCodeInjected = false;
 //window.a2wBookmarklet12212018.registryID = '';
 
 //var a2w = new addToAmazonWishlist();
-var a2w = new addToAmazonWishlist(null,null,true);
-a2w.mapProductJsonToInputs(test.getNormalizedProductDetails());
-a2w.run();
+window.a2wInstance = new addToAmazonWishlist(null,null,true);
+a2wInstance.mapProductJsonToInputs(test.getNormalizedProductDetails());
+a2wInstance.run();
