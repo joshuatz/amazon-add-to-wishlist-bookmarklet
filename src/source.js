@@ -6,7 +6,7 @@
 function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
     // Set scope of future queries
     this.domScope = document.querySelector('html');
-    if (typeof(opt_DomElementOrSelector)==='object'){
+    if (typeof(opt_DomElementOrSelector)==='object' && opt_DomElementOrSelector!==null){
         this.domScope = opt_DomElementOrSelector;
     }
     else if (typeof(opt_DomElementOrSelector)==='string' && document.querySelector(opt_DomElementOrSelector)){
@@ -67,7 +67,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             setSetting('popupCodeInjected',true);   
         }
         // Autofill popup with scraped product details
-        this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDector(this.domScope);
+        this.productDetectorInstance = typeof(this.productDetectorInstance)==='object' ? this.productDetectorInstance : new ProductDetector(this.domScope);
         console.log(this.productDetectorInstance.getNormalizedProductDetails());
         mapProductJsonToInputs(this.productDetectorInstance.getNormalizedProductDetails());
         // If registryId is not set, disable the ajax option
@@ -226,9 +226,13 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 'border-bottom-left-radius : 16px;' +
                 'border-bottom-right-radius : 16px;' +
                 'padding : 8px 0px;' +
+                'text-align: center;' +
             '}' +
             '.a2wPopupUi .a2wSubmitButton {' +
-                'width : 60%;' +
+                'width : 45%;' +
+                'display : inline;' +
+                'margin-left : auto;' +
+                'margin-right : 5%;' +
             '}' +
             '.a2wPopupUi .bottomAreaWrapper {' +
                 'background-color : #98c1d9;' +
@@ -367,15 +371,10 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
 
     function minimizePopup(){
         toggleVisiblity('.minimizeButton,.maximizeButton');
-        //this.popupDom.querySelector('.popupBody').style.height = '0px';
-        //this.popupDom.querySelector('.popupBody').classList.remove('expanded');
-        //this.popupDom.querySelector('.popupBody').classList.add('collapsed');
         this.popupDom.querySelector('.popupBody').style.maxHeight = '0px';
     }
     function maximinizePopup(){
         toggleVisiblity('.minimizeButton,.maximizeButton');
-        //this.popupDom.querySelector('.popupBody').classList.remove('collapsed');
-        //this.popupDom.querySelector('.popupBody').classList.add('expanded');
         this.popupDom.querySelector('.popupBody').style.maxHeight = '2000px';
     }
 
@@ -432,7 +431,17 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
 
         if (direction==='toPopup'){
             // Fill in picture section
-            getPopupDom().querySelector('.productSelectedImage').setAttribute('src',selectedProductDetails.imageUrl);
+            if (selectedProductDetails.imageUrl && selectedProductDetails.imageUrl !==''){
+                setSelectedImage(selectedProductDetails.imageUrl);
+            }
+            else {
+                // the ProductDetector was unable to identify a product specific image, so set the selected image to the first image on the page
+                var imageSrcs = generateImgSrcArrFromPage();
+                if (imageSrcs.length > 0){
+                    setSelectedImage(imageSrcs[0]);
+                }
+            }
+            
         }
         else if (direction==='fromPopup'){
             return selectedProductDetails;
@@ -443,6 +452,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         return autofillPopup('fromPopup');
     }
 
+    /**
+     * Grouped methods together that are related to the final step of actually pushing the product data to an Amazon wishlist (or opening in new tab)
+     */
     var submitter = {
         getLoaderElem : function(){
             return getPopupDom().querySelector('.loadingIndicatorWrapper');
@@ -518,6 +530,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             endpoint = this.dataFormToUrl(endpoint,formData);
             return endpoint;
         },
+        // Unfortunately, this method does not work at all, since Amazon has set a policy that does not allow their site (or the wishlist page) to be iframed into a different domain
         iframeModalLoad : function(){
             var endpoint = this.getNativeWishlistPageUrl();
             // Load up iframe modal
@@ -530,10 +543,12 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             iframeModalWrapper.innerHTML = '';
             iframeModalWrapper.appendChild(iframeModal);
         },
+        // This is basically the same URL as the iframe method, but opens in a new tab, to get around the cross-domain iframe issue
         openInNewTab : function(){
             var endpoint = this.getNativeWishlistPageUrl();
             window.open(endpoint,'_blank');
         },
+        // Reusable method to get around cross-domain ajax with JSONP. Note that this can't get around CORB for blocking of the response, just gets around for the request.
         jsonP : function(url,callback){
             callback = (callback || function(res){
                 console.log(res);
@@ -551,6 +566,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         }
     }
 
+    /**
+     * Removes the ENTIRE popup element
+     */
     function removePopup(){
         // Remove popup
         getPopupDom().remove();
@@ -558,6 +576,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         setSetting('popupCodeInjected',false); 
     }
 
+    /**
+     * Attaches event listeners, scoped to the popup element. Make sure to only attach once.
+     */
     function attachEventListeners(){
         // Toolbar buttons (minimize, maximize, close)
         this.popupDom.querySelector('.minimizeButton').addEventListener('click',minimizePopup.bind(this));
@@ -573,8 +594,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 evt.target.select();
             });
         });
-        // Submit buttons
-        //@TODO
+        // Submit Buttons
         this.popupDom.querySelectorAll('.a2wSubmitButton').forEach(function(button){
             var method = button.getAttribute('data-method');
             button.addEventListener('click',function(method){
@@ -591,6 +611,10 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         });
     }
 
+    /**
+     * Maps the productJson produced by ProductDetector to the internal selectedProductDetails obj
+     * @param {object} productJson - flat product info generated by ProductDetector
+     */
     function mapProductJsonToInputs(productJson){
         var mappings = {
             'productName' : 'productName',
@@ -638,8 +662,13 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         }
     }
 
-    function showImageSelector(primaryImageUrl){
-        primaryImageUrl = (primaryImageUrl || (selectedProductDetails.imageUrl!=='' ? selectedProductDetails.imageUrl : false));
+    /**
+     * Generates an array of image URLs, based on images in the current page. Skips images that are too small, those that use base64 instead of a hosted URL, etc.
+     * @param {string} [opt_SrcForFirstElement] - if there is a specific image you want in the #1 slot (such as a hero image)
+     * @returns {array} Array of image url strings
+     */
+    var generateImgSrcArrFromPage = function(opt_SrcForFirstElement){
+        var primaryImageUrl = (opt_SrcForFirstElement || (selectedProductDetails.imageUrl!=='' ? selectedProductDetails.imageUrl : false));
         var imageSrcArr = [];
         if (primaryImageUrl){
             imageSrcArr.push(primaryImageUrl);
@@ -665,6 +694,15 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 imageSrcArr.push(currImage.src);
             }
         }
+        return imageSrcArr;
+    }.bind(this);
+
+    /**
+     * Loads the image selector panel and makes it visible, based on what images are on the page, and/or passed parameter
+     * @param {string} [primaryImageUrl] - The URL you want to display as the primary selected image
+     */
+    var showImageSelector = function(primaryImageUrl){
+        var imageSrcArr = generateImgSrcArrFromPage(primaryImageUrl);
         // First, clear out existing HTML
         var imagePickerArea = getPopupDom().querySelector('.changeSelectedImagePicker');
         imagePickerArea.innerHTML = '';
@@ -686,7 +724,6 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                     });
                     clickedImage.parentElement.parentElement.classList.add('selected');
                     setSelectedImage(clickedImage.src);
-                    console.log(evt);
 
                 }.bind(this));
                 var imageElem = document.createElement('img');
@@ -711,15 +748,21 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         }
         // Set flag
         imageSelectorOpen = true;
-    }
+    }.bind(this);
     
-
-    function setSelectedImage(imageUrl){
+    /**
+     * Sets the selected image, both in the GUI to the user, and in the selectedProductDetails obj
+     * @param {string} imageUrl - the URL of the image to set as the selected image
+     */
+    var setSelectedImage = function(imageUrl){
         getPopupDom().querySelector('img.productSelectedImage').src = imageUrl;
         this.selectedImage = imageUrl;
         selectedProductDetails.imageUrl = imageUrl;
-    }
+    }.bind(this);
 
+    /**
+     * Return methods
+     */
     return {
         run : run.bind(this),
         mapProductJsonToInputs : mapProductJsonToInputs.bind(this),
@@ -728,7 +771,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
     };
 }
 
-function ProductDector(opt_DomElementOrSelector){
+function ProductDetector(opt_DomElementOrSelector){
     // Set scope of future queries
     this.hasScraped = false;
     this.domScope = document.querySelector('html');
@@ -882,6 +925,11 @@ function ProductDector(opt_DomElementOrSelector){
         return undefined;
     };
 
+    /**
+     * Gets price info, based on querySelector first, falling back to regex as last resort
+     * Updates the global productDetails object
+     * @returns price as float
+     */
     this.getPriceInfo = function(){
         var price = this.getValueSelectorArr(infoQuerySelectors.special.priceAmount);
         if (!price){
@@ -893,6 +941,9 @@ function ProductDector(opt_DomElementOrSelector){
         }
         return helpers.parsePrice(price);
     };
+    /**
+     * Gets all product details except for those that require special processing beyond querySelectors (price for now)
+     */
     this.getRegularDetails = function(){
         Object.keys(productDetails).forEach(function(detailName){
             if (detailName in infoQuerySelectors.regular){
@@ -904,6 +955,9 @@ function ProductDector(opt_DomElementOrSelector){
         }.bind(this));
     };
 
+    /**
+     * Helper functions
+     */
     var helpers = {
         iterateOver : function(thing,callback,callbackArgs){
             callbackArgs = (callbackArgs || {})
@@ -976,6 +1030,10 @@ function ProductDector(opt_DomElementOrSelector){
         }
     }
 
+    /**
+     * Attempts to find product LD-JSON schema in the page or product area
+     * @returns false if can't find, otherwise the the schema parsed as JSON
+     */
     this.findProductLdJson = function(){
         var productLdJson = false;
         function matchesProductJson(obj){
@@ -1015,6 +1073,10 @@ function ProductDector(opt_DomElementOrSelector){
         return productLdJson;
     };
 
+    /**
+     * Essentially a "mapper" that grabs attributes from standard product ld-json schema and places into my productDetails obj
+     * @param {object} json - product ld-json, parsed into an object (via JSON.parse()) 
+     */
     this.parseProductLdJson = function(json){
         if ('offers' in json || 'Offers' in json){
             var offers = 'offers' in json ? json.offers : json.Offers;
@@ -1038,15 +1100,17 @@ function ProductDector(opt_DomElementOrSelector){
     this.tryLdJson = function(){
         var productLdJson = this.findProductLdJson();
         if (productLdJson){
-            console.log(productLdJson);
             this.parseProductLdJson(productLdJson);
         }
     }
     this.specificSiteProductDetector = function(site){
         if (site === 'shopify'){
-
+            //@TODO
         }
     };
+    /**
+     * This should run the scraper and should work for getting product details on most sites. Uses combination of standardized schema, markup, and regex
+     */
     this.genericSiteProductDetector = function(){
         this.getPriceInfo();
         this.getRegularDetails();
@@ -1055,9 +1119,6 @@ function ProductDector(opt_DomElementOrSelector){
         return productDetails;
     };
 
-    this.getProductDetails = function(){
-        return productDetails;
-    }
     // @TODO
     this.getNormalizedProductDetails = function(){
         if (!this.hasScraped){
@@ -1069,7 +1130,7 @@ function ProductDector(opt_DomElementOrSelector){
     }
 }
 
-var test = new ProductDector();
+var test = new ProductDetector();
 test.genericSiteProductDetector();
 console.log(test.getNormalizedProductDetails());
 document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
