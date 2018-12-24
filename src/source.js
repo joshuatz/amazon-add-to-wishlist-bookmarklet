@@ -1188,9 +1188,6 @@ document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
 });
 window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
 window.a2wBookmarklet12212018.popupCodeInjected = false;
-//window.a2wBookmarklet12212018.registryID = '';
-
-//var a2w = new addToAmazonWishlist();
 window.a2wInstance = new addToAmazonWishlist(null,null,true);
 a2wInstance.mapProductJsonToInputs(test.getNormalizedProductDetails());
 a2wInstance.run();

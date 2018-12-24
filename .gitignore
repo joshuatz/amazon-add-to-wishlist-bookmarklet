@@ -6,3 +6,5 @@ bookmarklet_raw_combined.js
 bookmarklet_export.js
 build/*.html
 build/*.js
+# Config
+config/config.js
