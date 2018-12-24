@@ -292,6 +292,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 'height:auto;' +
                 'background-color: #98c1d9 !important;' +
                 'color: black !important;' +
+                'font-size : large !important;' +
             '}' +
             '.a2wPopupUi .a2wInputWrapper .a2wLabel {' +
                 'width:100%;' +
@@ -501,7 +502,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             this.getLoaderElem().classList.add('a2wHidden');
         },
         dataFormToUrl : function(baseUrl,formDataObj){
-            finalUrl = baseUrl;
+            var finalUrl = baseUrl;
             for (var prop in formDataObj){
                 var val = formDataObj[prop];
                 var pair = encodeURIComponent(prop) + '=' + encodeURIComponent(val);
@@ -620,7 +621,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         // Select text in input field on field click
         this.popupDom.querySelectorAll('.a2wInputWrapper input, .a2wInputWrapper textarea').forEach(function(input){
             input.addEventListener('click',function(evt){
-                evt.target.select();
+                // Disabled auto select of text in input on click - got annoying and not really that hard to do CTRL+A
+                //evt.target.select();
             });
         });
         // Submit Buttons
@@ -1101,7 +1103,7 @@ function ProductDetector(opt_DomElementOrSelector){
         
         var allJsonLdScripts = this.domScope.querySelectorAll('script[type="application/ld+json"]');
         for (var x=0; x<allJsonLdScripts.length; x++){
-            elem = allJsonLdScripts[x];
+            var elem = allJsonLdScripts[x];
             try {
                 var topLdJson = JSON.parse(elem.innerText);
                 var attempt = helpers.recurseObjUntilMatch(topLdJson,6,0,matchesProductJson);
