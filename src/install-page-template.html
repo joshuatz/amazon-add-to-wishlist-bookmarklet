@@ -1,1 +1,104 @@
-Drag this link to your toolbar: <a href="{{bookmarklet_code}}">Add to Amazon Wishlist</a>
+<div class="installLinkWrapper noConfig">
+        <h3 class="hideIfAlreadyConfig">Bookmarklet without config:</h3>
+        <div class="offset">Drag this link to your toolbar: <a href="{{bookmarklet_code}}">Add to Amazon Wishlist</a></div>
+</div>
+
+<div class="configuratorWrapper hidden">
+    <hr>
+    <p>It is recommended that you configure the bookmarklet with your Amazon wishlist ID (aka registryID) so that you can use the "Add (Same Tab)" button instead of the "New Tab" button, as it is much more reliable. Please enter your registry ID in the box below, then hit the generate button.</p>
+    <div class="input-field offset">
+        <label for="registryIdInput"></label>
+        <input type="text" id="registryIdInput" placeholder="BUWBWH9K2H77" />
+    </div>
+    <div class="buttonWrapper" style="width: 270px; margin-left: 60px;">
+        <div class="button generateButton">Generate Bookmarklet for Wishlist</div>
+    </div>
+    <div class="bookmarkletWithConfigOutputWrapper hidden offset">
+        <h3>Bookmarklet with config</h3>
+        <div class="offset">Drag this link to your toolbar: <a href="#">Add to Amazon Wishlist</a></div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        var generateOutputArea = document.querySelector('.bookmarkletWithConfigOutputWrapper');
+        var bookmarkletCodeNoConfig = document.querySelector('.installLinkWrapper.noConfig a').href;
+        var bookmarkletWithConfigLink = document.querySelector('.bookmarkletWithConfigOutputWrapper a');
+
+        // This variable will be populated by install-build.js script
+        var alreadyHasConfig = '{{already_has_config}}';
+        if (!alreadyHasConfig){
+            document.querySelector('.configuratorWrapper').classList.remove('hidden');
+            document.querySelectorAll('.hideIfAlreadyConfig').forEach(function(elem){
+                elem.classList.remove('hidden');
+            });
+        }
+        else {
+            document.querySelectorAll('.hideIfAlreadyConfig').forEach(function(elem){
+                elem.classList.add('hidden');
+            });
+        }
+        document.querySelector('.generateButton').addEventListener('click',function(evt){
+            var registryID = document.querySelector('#registryIdInput').value;
+            if (registryID && registryID!=='' && /\w{13}/.test(registryID)){
+                // Generate the bookmarklet with config
+                var originalCode = bookmarkletCodeNoConfig;
+                var configJs = 'window.a2wBookmarklet12212018=(window.a2wBookmarklet12212018||{});window.a2wBookmarklet12212018.registryID="' + registryID + '";';
+                var newCode = originalCode.replace('javascript:(function()%7B','javascript:(function()%7B' + encodeURIComponent(configJs));
+                bookmarkletWithConfigLink.href = newCode;
+                generateOutputArea.classList.remove('hidden');
+
+            }
+            else {
+                alert('You need to enter a valid registry ID!');
+                generateOutputArea.classList.add('hidden');
+            }
+        });
+
+        function toggleGeneratorOutput(){
+            
+            generateOutputArea.classList.toggle('hidden');
+        }
+    })();
+</script>
+
+<style>
+    .hidden {
+        display: none;
+    }
+    .button {
+        max-width: 300px;
+        background-color: #54c354;
+        border-radius: 30px;
+        padding: 3px 10px;
+        text-align: center;
+        color: black;
+        border: 2px double black;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+    }
+    .offset {
+        margin-left: 22px;
+    }
+</style>
+
+<!-- Schema for the bookmarklet to find if users want to test on this page -->
+<script type="application/ld+json">
+    {
+      "@context": "http://schema.org/", 
+      "@type": "Product", 
+      "name": "Add to Amazon Wishlist Bookmarklet",
+      "image": "",
+      "description": "Add to Amazon Wishlist Bookmarklet - https://joshuatz.com/?post_type=projects&p=143&preview=true",
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "USD",
+        "price": "0"
+      }
+    }
+</script>
+<script>
+    window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
+    window.a2wBookmarklet12212018.overrideUrl = 'https://www.amazon.com';
+</script>

@@ -2,10 +2,17 @@
 ## Quick Intro:
 The code in this repo is my raw, unprocessed code. If you want the actual bookmarklet, you can either checkout this repo and run "npm run build" to generate the installer page, or just go get the bookmarklet at [INSERT  LINK HERE](INSERTLINKHERE).
 
+
+
 ---
 
 ## The What:
 This is the code behind a bookmarklet (a bookmark that executes a bit of JavaScript when you click it) that will let you add products to your Amazon wishlist from (almost) any website, even competitors of Amazon like eBay or Aliexpress. It is meant to replace the original bookmarklet that Amazon stopped offering, but I have also added some extra functionality and product detection features.
+
+Please note that there are two ways that the bookmarklet can add an item to your list - same tab (AJAX) vs new tab, and the new tab method is unreliable at the moment due to a glitch on Amazon's side. I would recommend the same tab method, but for that to work, you need to configure the bookmarklet with your wishlist id (registryID). You can do this a few different ways:
+ *  A) Use my hosted installer page here
+ *  B) Clone this repo, build with npm run build, and then plug in your registry ID into the local installer page
+ *  C) Clone this repo, then copy /config/config.example.js to /config/config.js and plug in your registryID into the file. Then run npm run build-wconfig instead of just "build".
 
 ---
 
@@ -20,5 +27,5 @@ Amazon used to offer something very close to what I created, a "Universal Add to
  -  When building a bookmarklet, there are really two options for keeping it up-to-date. I could have the bookmarklet talk to my server and always fetch the latest code, but this will break functionality on sites that block third party scripts, plus it prevents you as a user from full transparency of what code is injected into the page. Thus I went with option #2, which is to have 100% of the code that runs contained in the bookmarklet itself - no remote code is loaded. However, **this means that if something breaks and I have to release a new version of the bookmarklet, in order for you to update your version, you would have to manually overwrite your bookmark with the new version. _This bookmarklet will not auto-update_.**.
      -  This is an area where browser extensions (like Chrome Extensions) are clearly the winner. I'm sure the distribution of updates was part of Amazon's decision to move from the bookmarklet to an extension.
  -  I tested it with a bunch of random top shopping sites, but it is not guaranteed to work on all of them.
- - The AJAX option to add an item (i.e. you don't have to leave the page your are on to submit) is only possible if you have configured the bookmarklet with your amazon wishlist ID (aka registryID)
+ - The AJAX option to add an item (i.e. you don't have to leave the page your are on to submit) is only possible if you have configured the bookmarklet with your amazon wishlist ID (aka registryID). However, this method is generally much more reliable than the "new tab" method.
  

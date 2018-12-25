@@ -42,6 +42,11 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         return window[globSettingKey];
     }
 
+    // Allow for product URL override
+    if (typeof(getSetting('overrideUrl'))==='string'){
+        selectedProductDetails.productUrl = getSetting('overrideUrl');
+    }
+
     function run(){
         window[globSettingKey] = (window[globSettingKey] || {});
         // Inject code
@@ -474,6 +479,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             
         }
         else if (direction==='fromPopup'){
+            debugger;
             return selectedProductDetails;
         }
     }
@@ -514,6 +520,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             this.showLoader();
             var endpoint = 'https://www.amazon.com/gp/ubp/json/atwl/add';
             gatherFromPopup();
+            console.log('Adding to wishlist via AJAX');
+            console.log(selectedProductDetails);
             // Mapping
             var formData = {
                 name : selectedProductDetails.productName,
@@ -676,6 +684,12 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         else if (getSetting('registryID')){
             selectedProductDetails.registryID = getSetting('registryID');
         }
+
+        // Allow for product URL override
+        if (typeof(getSetting('overrideUrl'))==='string'){
+            selectedProductDetails.productUrl = getSetting('overrideUrl');
+        }
+
         return selectedProductDetails;
     }
 
@@ -1180,14 +1194,13 @@ function ProductDetector(opt_DomElementOrSelector){
     };
 }
 
-var test = new ProductDetector();
-test.genericSiteProductDetector();
-console.log(test.getNormalizedProductDetails());
+var productDetector = new ProductDetector();
+productDetector.genericSiteProductDetector();
 document.querySelectorAll('.a2wPopupUiWrapper').forEach(function(thing){
     thing.parentElement.remove();
 });
 window.a2wBookmarklet12212018 = (window.a2wBookmarklet12212018 || {});
 window.a2wBookmarklet12212018.popupCodeInjected = false;
 window.a2wInstance = new addToAmazonWishlist(null,null,true);
-a2wInstance.mapProductJsonToInputs(test.getNormalizedProductDetails());
+a2wInstance.mapProductJsonToInputs(productDetector.getNormalizedProductDetails());
 a2wInstance.run();
