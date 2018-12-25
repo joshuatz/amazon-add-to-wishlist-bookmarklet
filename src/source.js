@@ -479,7 +479,6 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             
         }
         else if (direction==='fromPopup'){
-            debugger;
             return selectedProductDetails;
         }
     }
@@ -1123,6 +1122,7 @@ function ProductDetector(opt_DomElementOrSelector){
                 var attempt = helpers.recurseObjUntilMatch(topLdJson,6,0,matchesProductJson);
                 if (matchesProductJson(attempt)){
                     productLdJson = attempt;
+                    break;
                 }
             }
             finally {
@@ -1142,6 +1142,7 @@ function ProductDetector(opt_DomElementOrSelector){
      * @param {object} json - product ld-json, parsed into an object (via JSON.parse()) 
      */
     this.parseProductLdJson = function(json){
+        console.log(json);
         if ('offers' in json || 'Offers' in json){
             var offers = 'offers' in json ? json.offers : json.Offers;
             if (typeof(offers)==='object'){
@@ -1159,6 +1160,9 @@ function ProductDetector(opt_DomElementOrSelector){
         }
         productDetails.productImageUrl = ('image' in json) ? json.image : productDetails.productImageUrl;
         productDetails.productSku = ('sku' in json) ? json.sku : productDetails.productSku;
+        productDetails.productName = (typeof(json.name)==='string') ? json.name : productDetails.productName;
+        productDetails.productDescription = (typeof(json.description)==='string') ? json.description : productDetails.productName;
+        console.log(productDetails);
     };
 
     this.tryLdJson = function(){
