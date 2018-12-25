@@ -1,6 +1,7 @@
 # Amazon Add to Wishlist Bookmarklet
+![Demo GIF](https://github.com/joshuatz/amazon-add-to-wishlist-bookmarklet/raw/master/images/Adding%20from%20the%20Same%20Tab%20(AJAX)(Compressed).gif "Adding an item from Target to my Amazon Wishlist")
 ## Quick Intro:
-The code in this repo is my raw, unprocessed code. If you want the actual bookmarklet, you can either checkout this repo and run "npm run build" to generate the installer page, or just go get the bookmarklet at [INSERT  LINK HERE](INSERTLINKHERE).
+The code in this repo is my raw, unprocessed code. If you want the actual bookmarklet, you can either checkout this repo and run "npm run build" to generate the installer page, or just go get the bookmarklet [here](https://joshuatz.com/projects/web-stuff/amazon-add-to-wishlist-bookmarklet).
 
 
 
