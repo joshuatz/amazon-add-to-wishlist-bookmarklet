@@ -11,7 +11,7 @@ The code in this repo is my raw, unprocessed code. If you want the actual bookma
 This is the code behind a bookmarklet (a bookmark that executes a bit of JavaScript when you click it) that will let you add products to your Amazon wishlist from (almost) any website, even competitors of Amazon like eBay or Aliexpress. It is meant to replace the original bookmarklet that Amazon stopped offering, but I have also added some extra functionality and product detection features.
 
 Please note that there are two ways that the bookmarklet can add an item to your list - same tab (AJAX) vs new tab, and the new tab method is unreliable at the moment due to a glitch on Amazon's side. I would recommend the same tab method, but for that to work, you need to configure the bookmarklet with your wishlist id (registryID). You can do this a few different ways:
- *  A) Use my hosted installer page here
+ *  A) Use my hosted installer page [here](https://joshuatz.com/projects/web-stuff/amazon-add-to-wishlist-bookmarklet).
  *  B) Clone this repo, build with npm run build, and then plug in your registry ID into the local installer page
  *  C) Clone this repo, then copy /config/config.example.js to /config/config.js and plug in your registryID into the file. Then run npm run build-wconfig instead of just "build".
 
