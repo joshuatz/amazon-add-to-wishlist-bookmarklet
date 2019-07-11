@@ -163,6 +163,9 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                                 '<div class="a2wSvgWrapper a2wHidden a2wSuccessSvg">' +
                                     '<?xml version="1.0" ?><svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#222E50" id="Core" transform="translate(-465.000000, -45.000000)"><g id="check-box" transform="translate(465.000000, 45.000000)"><path d="M16,0 L2,0 C0.9,0 0,0.9 0,2 L0,16 C0,17.1 0.9,18 2,18 L16,18 C17.1,18 18,17.1 18,16 L18,2 C18,0.9 17.1,0 16,0 L16,0 Z M7,14 L2,9 L3.4,7.6 L7,11.2 L14.6,3.6 L16,5 L7,14 L7,14 Z" id="Shape"/></g></g></g></svg>' +
                                 '</div>' +
+                                '<div class="a2wSvgWrapper a2wHidden a2wErrorSvg">' +
+                                    '<?xml version="1.0" ?><svg id="Layer_1" style="enable-background:new 0 0 30 30;" version="1.1" viewBox="0 0 30 30" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><circle cx="26" cy="24" r="2"/><path d="M17,5c0,1.105-0.895,1-2,1s-2,0.105-2-1s0.895-2,2-2S17,3.895,17,5z"/><circle cx="4" cy="24" r="2"/><path d="M16.836,4.21L15,4l-1.836,0.21L2.3,22.948L4.144,26H15h10.856l1.844-3.052L16.836,4.21z M16.212,11.36l-0.2,6.473h-2.024  l-0.2-6.473H16.212z M15.003,22.189c-0.828,0-1.323-0.441-1.323-1.182c0-0.755,0.494-1.196,1.323-1.196  c0.822,0,1.316,0.441,1.316,1.196C16.319,21.748,15.825,22.189,15.003,22.189z"/></svg>' +
+                                '</div>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -499,9 +502,17 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             this.getLoaderElem().querySelector('.a2wLoadingSvg').classList.remove('a2wHidden');
             this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.add('a2wHidden');
         },
-        showLoaderComplete : function(){
+        showLoaderComplete : function(success){
+            success = typeof(success)==='boolean' ? success : true;
             this.getLoaderElem().querySelector('.a2wLoadingSvg').classList.add('a2wHidden');
-            this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.remove('a2wHidden');
+            if (success){
+                this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.remove('a2wHidden');
+                this.getLoaderElem().querySelector('.a2wErrorSvg').classList.add('a2wHidden');
+            }
+            else {
+                this.getLoaderElem().querySelector('.a2wSuccessSvg').classList.add('a2wHidden');
+                this.getLoaderElem().querySelector('.a2wErrorSvg').classList.remove('a2wHidden');
+            }
         },
         hideLoader : function(){
             this.getLoaderElem().classList.add('a2wHidden');
@@ -516,6 +527,7 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             return finalUrl;
         },
         ajaxPostSubmit : function(){
+            var _this = this;
             this.showLoader();
             var endpoint = 'https://www.amazon.com/gp/ubp/json/atwl/add';
             gatherFromPopup();
@@ -533,21 +545,21 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
                 registryID : selectedProductDetails.registryID,
                 type : selectedProductDetails.type
             };
-            endpoint = this.dataFormToUrl(endpoint,formData);
-            this.jsonP(endpoint,function(res){
-                // CORB will block response of JSONP, so there is no way to know if success or fail. THIS CODE WILL NOT BE REACHED UNLESS OUTSIDE CHROME OR CORB / CORS POLICY CHANGES
+            console.log(formData);
+            endpointQueryEncoded = this.dataFormToUrl(endpoint,formData);
+            this.formPost(endpoint,formData,function(res){
                 console.log(res);
-                setTimeout(function(){
-                    ajaxDoneAction();
-                },500);
+                _this.ajaxDoneAction(true);
+            },function(err){
+                _this.ajaxDoneAction(false);
             });
-            // Since CORB will stop callback on above, just use timeout
+            // Fallback
             setTimeout(function(){
-                this.ajaxDoneAction();
-            }.bind(this),600);
+                _this.ajaxDoneAction(false);
+            }.bind(this),2500);
         },
-        ajaxDoneAction : function(){
-            this.showLoaderComplete();
+        ajaxDoneAction : function(success){
+            this.showLoaderComplete(success);
             setTimeout(function(){
                 removePopup();
             },600);
@@ -600,6 +612,25 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
             var script = document.createElement('script');
             script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
             document.body.appendChild(script);
+        },
+        formPost : function(url,dataObj,callback,OPT_errCb){
+            var errorCb = typeof(OPT_errCb)==='function' ? OPT_errCb : function(){};
+            dataObj = (dataObj || {});
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            // Attach listener
+            xhr.addEventListener('error',errorCb);
+            xhr.addEventListener('readystatechange',function(){
+                if (this.readyState === 4){
+                    callback(this);
+                }
+            });
+            // Construct FormData
+            var formDataUrlEncoded = this.dataFormToUrl('',dataObj);
+            xhr.open('POST',url);
+            xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+            xhr.setRequestHeader('cache-control','no-cache');
+            xhr.send(formDataUrlEncoded);
         }
     };
 
@@ -818,7 +849,8 @@ function addToAmazonWishlist(opt_DomElementOrSelector,opt_WishlistId,debug){
         run : run.bind(this),
         mapProductJsonToInputs : mapProductJsonToInputs.bind(this),
         minimizePopup : minimizePopup.bind(this),
-        maximinizePopup : maximinizePopup.bind(this)
+        maximinizePopup : maximinizePopup.bind(this),
+        formPost: submitter.formPost.bind(this)
     };
 }
 /**

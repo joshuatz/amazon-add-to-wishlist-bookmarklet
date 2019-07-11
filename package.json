@@ -1,6 +1,6 @@
 {
   "name": "amazon-a2w-bookmarklet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Amazon Add-To-Wishlist Bookmarklet",
   "main": "source.js",
   "scripts": {
