@@ -8,7 +8,7 @@
     "combine-dependencies": "concat -o ./build/bookmarklet_raw_combined.js ./node_modules/draggabilly/dist/draggabilly.pkgd.js ./src/source.js",
     "build-bookmarklet": "npm run combine-dependencies && bookmarklet ./build/bookmarklet_raw_combined.js ./build/bookmarklet_export.js",
     "build": "npm run build-bookmarklet && node install-build.js",
-    "build-wconfig" : "npm run combine-dependencies && concat -o ./build/bookmarklet_raw_combined.js ./config/config.js ./build/bookmarklet_raw_combined.js && bookmarklet ./build/bookmarklet_raw_combined.js ./build/bookmarklet_export.js && node install-build.js"
+    "build-wconfig": "npm run combine-dependencies && concat -o ./build/bookmarklet_raw_combined.js ./config/config.js ./build/bookmarklet_raw_combined.js && bookmarklet ./build/bookmarklet_raw_combined.js ./build/bookmarklet_export.js && node install-build.js"
   },
   "author": "Joshua Tzucker",
   "license": "ISC",
@@ -18,6 +18,6 @@
     "concat": "^1.0.3",
     "draggabilly": "^2.2.0",
     "fs": "0.0.1-security",
-    "replace": "^1.0.1"
+    "replace": "^1.1.0"
   }
 }
