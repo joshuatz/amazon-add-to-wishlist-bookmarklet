@@ -1,3 +1,6 @@
+# WARNING: This project is now "dead"
+Amazon finally locked down and/or removed all the services and endpoints this bookmarklet relies on. After an exhaustive search, I could not find any suitable workarounds, so I have to abandon this tool unless someone can find a new endpoint to use. See [this issue](https://github.com/joshuatz/amazon-add-to-wishlist-bookmarklet/issues/1) for details. Sorry everyone! :(
+
 # Amazon Add to Wishlist Bookmarklet
 ![Demo GIF](https://github.com/joshuatz/amazon-add-to-wishlist-bookmarklet/raw/master/images/Adding%20from%20the%20Same%20Tab%20(AJAX)(Compressed).gif "Adding an item from Target to my Amazon Wishlist")
 ## Quick Intro:
