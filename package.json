@@ -13,7 +13,7 @@
   "author": "Joshua Tzucker",
   "license": "ISC",
   "dependencies": {
-    "bookmarklet": "^1.0.2",
+    "bookmarklet": "^3.0.0",
     "bookmarkleter": "^0.2.2",
     "concat": "^1.0.3",
     "draggabilly": "^2.2.0",
